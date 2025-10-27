@@ -1,21 +1,6 @@
-version: '3.8'
-
 services:
   app:
     build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - DB_HOST=purelac-purelacsorteo-r39cuy
-      - DB_PORT=5432
-      - DB_NAME=sorteo_db
-      - DB_USER=usuario
-      - DB_PASS=contraseña
-      - SESSION_SECRET=clave_secreta_sesiones
-      - UPLOAD_PATH=./public/uploads
-      - N8N_WEBHOOK_URL=https://tun8n.com/webhook/ticket-validation
-      - PORT=3000
     volumes:
       - ./public/uploads:/app/public/uploads
     networks:
