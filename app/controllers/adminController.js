@@ -14,62 +14,102 @@ class AdminController {
     try {
       const { username, password } = req.body;
 
-      console.log(`Intento de login: usuario '${username}'`);
+      console.log(`🔐 Intento de login: usuario '${username}'`);
 
       if (!username || !password) {
-        console.log('Login fallido: campos vacíos');
+        console.log('❌ Login fallido: campos vacíos');
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Usuario y contraseña requeridos'
         });
       }
 
+      // Verificar conexión a BD primero
+      const { sequelize } = require('../config/database');
+      try {
+        await sequelize.authenticate();
+        console.log('✅ Conexión a BD OK');
+      } catch (dbError) {
+        console.error('❌ Error de conexión a BD:', dbError.message);
+        return res.render('admin/login', {
+          title: 'Login Administrador',
+          error: 'Error de conexión a la base de datos'
+        });
+      }
+
       // Buscar usuario admin
+      console.log('🔍 Buscando usuario en BD...');
       const admin = await AdminUser.findOne({ where: { username } });
       if (!admin) {
-        console.log(`Login fallido: usuario '${username}' no encontrado en BD`);
-        return res.render('admin/login', {
-          title: 'Login Administrador',
-          error: 'Credenciales inválidas'
-        });
+        console.log(`❌ Login fallido: usuario '${username}' no encontrado en BD`);
+
+        // Intentar crear usuario si no existe y tenemos las variables
+        const config = require('../config/env');
+        if (config.adminUsername && config.adminPassword && username === config.adminUsername) {
+          console.log('🔧 Intentando crear usuario admin...');
+          try {
+            await AdminUser.createDefaultAdmin();
+            const newAdmin = await AdminUser.findOne({ where: { username } });
+            if (newAdmin) {
+              console.log('✅ Usuario admin creado exitosamente');
+              // Continuar con el login del usuario recién creado
+            } else {
+              throw new Error('No se pudo crear el usuario admin');
+            }
+          } catch (createError) {
+            console.error('❌ Error creando usuario admin:', createError.message);
+            return res.render('admin/login', {
+              title: 'Login Administrador',
+              error: 'Error interno del servidor'
+            });
+          }
+        } else {
+          return res.render('admin/login', {
+            title: 'Login Administrador',
+            error: 'Credenciales inválidas'
+          });
+        }
       }
 
-      console.log(`Usuario encontrado: ${admin.username}, ID: ${admin.id}`);
+      const finalAdmin = await AdminUser.findOne({ where: { username } });
+      console.log(`✅ Usuario encontrado: ${finalAdmin.username}, ID: ${finalAdmin.id}`);
 
       // Verificar contraseña
-      const isValidPassword = await admin.checkPassword(password);
+      console.log('🔐 Verificando contraseña...');
+      const isValidPassword = await finalAdmin.checkPassword(password);
       if (!isValidPassword) {
-        console.log(`Login fallido: contraseña incorrecta para usuario '${username}'`);
+        console.log(`❌ Login fallido: contraseña incorrecta para usuario '${username}'`);
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Credenciales inválidas'
         });
       }
 
-      console.log(`Contraseña válida para usuario '${username}'`);
+      console.log(`✅ Contraseña válida para usuario '${username}'`);
 
       // Crear sesión
-      req.session.adminId = admin.id;
-      req.session.adminUsername = admin.username;
+      req.session.adminId = finalAdmin.id;
+      req.session.adminUsername = finalAdmin.username;
       req.session.adminLoggedIn = true;
 
-      console.log(`Login exitoso: usuario '${username}' autenticado, redirigiendo a dashboard`);
+      console.log(`🎉 Login exitoso: usuario '${username}' autenticado, redirigiendo a dashboard`);
 
       // Forzar guardado de sesión antes de redirigir
       req.session.save((err) => {
         if (err) {
-          console.error('Error guardando sesión:', err);
+          console.error('❌ Error guardando sesión:', err);
           return res.render('admin/login', {
             title: 'Login Administrador',
             error: 'Error interno del servidor'
           });
         }
+        console.log('💾 Sesión guardada correctamente');
         res.redirect('/admin/dashboard');
       });
 
     } catch (error) {
-      console.error('Error en login:', error);
-      console.error('Stack trace:', error.stack);
+      console.error('❌ Error en login:', error);
+      console.error('Stack trace completo:', error.stack);
       res.render('admin/login', {
         title: 'Login Administrador',
         error: 'Error interno del servidor'
