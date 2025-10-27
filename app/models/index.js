@@ -13,11 +13,118 @@ const syncDatabase = async () => {
       // Crear admin por defecto solo en desarrollo
       await AdminUser.createDefaultAdmin();
     } else {
-      console.log('ℹ️ Modo producción: Eliminando y recreando tablas...');
+      console.log('ℹ️ Modo producción: Verificando estado de BD...');
 
-      // En producción, forzar recreación completa de tablas
-      await sequelize.sync({ force: true });
-      console.log('✅ Tablas recreadas completamente en producción');
+      // Verificar si las tablas existen primero
+      try {
+        await sequelize.getQueryInterface().describeTable('participants');
+        console.log('✅ Tabla participants existe');
+
+        await sequelize.getQueryInterface().describeTable('admin_users');
+        console.log('✅ Tabla admin_users existe');
+
+        console.log('✅ Todas las tablas existen, continuando...');
+
+      } catch (tableError) {
+        console.log('ℹ️ Tablas no existen, intentando crearlas...');
+
+        try {
+          // Crear tablas manualmente si no existen
+          await sequelize.getQueryInterface().createTable('participants', {
+            id: {
+              type: sequelize.Sequelize.UUID,
+              defaultValue: sequelize.Sequelize.UUIDV4,
+              primaryKey: true
+            },
+            ticket_number: {
+              type: sequelize.Sequelize.STRING(10),
+              allowNull: false,
+              unique: true
+            },
+            name: {
+              type: sequelize.Sequelize.STRING(100),
+              allowNull: false
+            },
+            last_name: {
+              type: sequelize.Sequelize.STRING(100),
+              allowNull: false
+            },
+            cedula: {
+              type: sequelize.Sequelize.STRING(20),
+              allowNull: false,
+              unique: true
+            },
+            phone: {
+              type: sequelize.Sequelize.STRING(20),
+              allowNull: false
+            },
+            province: {
+              type: sequelize.Sequelize.STRING(50),
+              allowNull: false
+            },
+            ticket_validated: {
+              type: sequelize.Sequelize.BOOLEAN,
+              defaultValue: false,
+              allowNull: false
+            },
+            validation_reason: {
+              type: sequelize.Sequelize.TEXT,
+              allowNull: true
+            },
+            ticket_image_url: {
+              type: sequelize.Sequelize.STRING(255),
+              allowNull: true
+            },
+            created_at: {
+              type: sequelize.Sequelize.DATE,
+              allowNull: false
+            },
+            updated_at: {
+              type: sequelize.Sequelize.DATE,
+              allowNull: false
+            }
+          });
+
+          await sequelize.getQueryInterface().createTable('admin_users', {
+            id: {
+              type: sequelize.Sequelize.UUID,
+              defaultValue: sequelize.Sequelize.UUIDV4,
+              primaryKey: true
+            },
+            username: {
+              type: sequelize.Sequelize.STRING(50),
+              allowNull: false,
+              unique: true
+            },
+            password_hash: {
+              type: sequelize.Sequelize.STRING(255),
+              allowNull: false
+            },
+            created_at: {
+              type: sequelize.Sequelize.DATE,
+              allowNull: false
+            },
+            updated_at: {
+              type: sequelize.Sequelize.DATE,
+              allowNull: false
+            }
+          });
+
+          // Crear índices
+          await sequelize.getQueryInterface().addIndex('participants', ['ticket_number'], { unique: true });
+          await sequelize.getQueryInterface().addIndex('participants', ['cedula'], { unique: true });
+          await sequelize.getQueryInterface().addIndex('participants', ['province']);
+          await sequelize.getQueryInterface().addIndex('participants', ['ticket_validated']);
+          await sequelize.getQueryInterface().addIndex('participants', ['created_at']);
+          await sequelize.getQueryInterface().addIndex('admin_users', ['username'], { unique: true });
+
+          console.log('✅ Tablas creadas manualmente exitosamente');
+
+        } catch (createError) {
+          console.error('❌ Error creando tablas manualmente:', createError.message);
+          throw createError;
+        }
+      }
 
       // En producción, intentar crear admin si las variables están configuradas
       const config = require('../config/env');
