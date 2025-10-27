@@ -155,8 +155,13 @@ class AdminController {
         // Usar setTimeout para asegurar que la sesión se guarde completamente
         setTimeout(() => {
           console.log('⏰ Redirigiendo a dashboard después de timeout...');
+          console.log('🔍 Sesión final antes de redirigir:', {
+            adminId: req.session.adminId,
+            adminUsername: req.session.adminUsername,
+            adminLoggedIn: req.session.adminLoggedIn
+          });
           res.redirect('/admin/dashboard');
-        }, 100);
+        }, 500); // Aumentar a 500ms para asegurar
       });
 
     } catch (error) {
