@@ -7,9 +7,10 @@ const sessionConfig = session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Cambiar a true en producción con HTTPS
+    secure: config.nodeEnv === 'production', // HTTPS en producción
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    sameSite: 'lax' // Protección CSRF
   },
   name: 'sorteo.sid' // Cambiar nombre de cookie por seguridad
 });

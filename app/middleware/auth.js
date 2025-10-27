@@ -1,6 +1,6 @@
 // Middleware de autenticación para admin
 const authMiddleware = (req, res, next) => {
-  if (req.session && req.session.adminId) {
+  if (req.session && req.session.adminId && req.session.adminLoggedIn) {
     return next();
   }
 
@@ -18,7 +18,7 @@ const authMiddleware = (req, res, next) => {
 
 // Middleware para verificar si ya está autenticado (para login)
 const guestMiddleware = (req, res, next) => {
-  if (req.session && req.session.adminId) {
+  if (req.session && req.session.adminId && req.session.adminLoggedIn) {
     return res.redirect('/admin/dashboard');
   }
   next();

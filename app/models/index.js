@@ -15,9 +15,21 @@ const syncDatabase = async () => {
     } else {
       console.log('ℹ️ Modo producción: No se sincronizan modelos automáticamente');
       console.log('ℹ️ Asegúrate de que las tablas existan en la base de datos');
+
+      // En producción, intentar crear admin si las variables están configuradas
+      const config = require('../config/env');
+      if (config.adminUsername && config.adminPassword) {
+        console.log('ℹ️ Intentando crear usuario admin en producción...');
+        await AdminUser.createDefaultAdmin();
+        console.log('✅ Usuario admin creado/verificado en producción');
+      } else {
+        console.log('⚠️ Variables ADMIN_USERNAME y ADMIN_PASSWORD no configuradas');
+      }
     }
   } catch (error) {
     console.error('❌ Error sincronizando modelos:', error);
+    console.error('Stack trace:', error.stack);
+
     // En producción, no fallar si hay error de sincronización
     if (process.env.NODE_ENV !== 'development') {
       console.log('⚠️ Continuando sin sincronización automática...');

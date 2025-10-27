@@ -8,6 +8,8 @@ const config = {
   n8nWebhookUrl: process.env.N8N_WEBHOOK_URL,
   n8nWebhookUser: process.env.N8N_WEBHOOK_USER,
   n8nWebhookPass: process.env.N8N_WEBHOOK_PASS,
+  adminUsername: process.env.ADMIN_USERNAME || 'admin',
+  adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
   database: {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 5432,

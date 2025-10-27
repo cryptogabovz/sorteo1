@@ -14,7 +14,10 @@ class AdminController {
     try {
       const { username, password } = req.body;
 
+      console.log(`Intento de login: usuario '${username}'`);
+
       if (!username || !password) {
+        console.log('Login fallido: campos vacíos');
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Usuario y contraseña requeridos'
@@ -24,29 +27,49 @@ class AdminController {
       // Buscar usuario admin
       const admin = await AdminUser.findOne({ where: { username } });
       if (!admin) {
+        console.log(`Login fallido: usuario '${username}' no encontrado en BD`);
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Credenciales inválidas'
         });
       }
+
+      console.log(`Usuario encontrado: ${admin.username}, ID: ${admin.id}`);
 
       // Verificar contraseña
       const isValidPassword = await admin.checkPassword(password);
       if (!isValidPassword) {
+        console.log(`Login fallido: contraseña incorrecta para usuario '${username}'`);
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Credenciales inválidas'
         });
       }
 
+      console.log(`Contraseña válida para usuario '${username}'`);
+
       // Crear sesión
       req.session.adminId = admin.id;
       req.session.adminUsername = admin.username;
+      req.session.adminLoggedIn = true;
 
-      res.redirect('/admin/dashboard');
+      console.log(`Login exitoso: usuario '${username}' autenticado, redirigiendo a dashboard`);
+
+      // Forzar guardado de sesión antes de redirigir
+      req.session.save((err) => {
+        if (err) {
+          console.error('Error guardando sesión:', err);
+          return res.render('admin/login', {
+            title: 'Login Administrador',
+            error: 'Error interno del servidor'
+          });
+        }
+        res.redirect('/admin/dashboard');
+      });
 
     } catch (error) {
       console.error('Error en login:', error);
+      console.error('Stack trace:', error.stack);
       res.render('admin/login', {
         title: 'Login Administrador',
         error: 'Error interno del servidor'
@@ -56,10 +79,12 @@ class AdminController {
 
   // Logout
   logout(req, res) {
+    const username = req.session.adminUsername;
     req.session.destroy((err) => {
       if (err) {
         console.error('Error cerrando sesión:', err);
       }
+      console.log(`Logout exitoso: usuario '${username}' cerró sesión`);
       res.redirect('/admin');
     });
   }
@@ -77,19 +102,50 @@ class AdminController {
         attributes: ['id', 'ticket_number', 'name', 'last_name', 'province', 'ticket_validated', 'created_at']
       });
 
+      // Información del webhook de n8n
+      const config = require('../config/env');
+      const webhookInfo = {
+        url: config.n8nWebhookUrl,
+        user: config.n8nWebhookUser,
+        examplePayload: {
+          image: "base64_encoded_image_data",
+          filename: "ticket_image.jpg",
+          mimetype: "image/jpeg",
+          timestamp: "2025-10-27T21:05:54.347Z",
+          source: "sorteo-web-upload"
+        },
+        exampleResponse: {
+          valid: true,
+          reason: "Ticket válido - formato correcto",
+          confidence: 0.95
+        }
+      };
+
       res.render('admin/dashboard', {
         title: 'Dashboard Administrador',
         stats,
-        recentParticipants
+        recentParticipants,
+        webhookInfo
       });
 
     } catch (error) {
       console.error('Error cargando dashboard:', error);
+      console.error('Stack trace:', error.stack);
+
+      // En caso de error de BD, devolver valores por defecto
+      const defaultStats = {
+        total_participants: 0,
+        validated_tickets: 0,
+        rejected_tickets: 0,
+        provinces_count: 0
+      };
+
       res.render('admin/dashboard', {
         title: 'Dashboard Administrador',
-        stats: { total_participants: 0, validated_tickets: 0, rejected_tickets: 0, provinces_count: 0 },
+        stats: defaultStats,
         recentParticipants: [],
-        error: 'Error cargando datos'
+        webhookInfo: null,
+        error: 'Error cargando datos del dashboard'
       });
     }
   }
