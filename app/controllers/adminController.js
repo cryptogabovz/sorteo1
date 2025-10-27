@@ -147,21 +147,9 @@ class AdminController {
           adminLoggedIn: req.session.adminLoggedIn
         });
 
-        // Redirigir con headers para forzar recarga
-        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.set('Pragma', 'no-cache');
-        res.set('Expires', '0');
-
-        // Usar setTimeout para asegurar que la sesión se guarde completamente
-        setTimeout(() => {
-          console.log('⏰ Redirigiendo a dashboard después de timeout...');
-          console.log('🔍 Sesión final antes de redirigir:', {
-            adminId: req.session.adminId,
-            adminUsername: req.session.adminUsername,
-            adminLoggedIn: req.session.adminLoggedIn
-          });
-          res.redirect('/admin/dashboard');
-        }, 500); // Aumentar a 500ms para asegurar
+        // Redirigir inmediatamente sin timeout
+        console.log('🚀 Redirigiendo inmediatamente a dashboard...');
+        res.redirect('/admin/dashboard');
       });
 
     } catch (error) {
