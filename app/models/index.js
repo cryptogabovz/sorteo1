@@ -13,18 +13,23 @@ const syncDatabase = async () => {
       // Crear admin por defecto solo en desarrollo
       await AdminUser.createDefaultAdmin();
     } else {
-      console.log('ℹ️ Modo producción: Verificando/creando tablas...');
+      console.log('ℹ️ Modo producción: Eliminando y recreando tablas...');
 
-      // En producción, crear tablas desde cero si no existen
+      // En producción, forzar recreación completa de tablas
       await sequelize.sync({ force: true });
-      console.log('✅ Tablas creadas desde cero en producción');
+      console.log('✅ Tablas recreadas completamente en producción');
 
       // En producción, intentar crear admin si las variables están configuradas
       const config = require('../config/env');
       if (config.adminUsername && config.adminPassword) {
-        console.log('ℹ️ Intentando crear usuario admin en producción...');
-        await AdminUser.createDefaultAdmin();
-        console.log('✅ Usuario admin creado/verificado en producción');
+        console.log('ℹ️ Creando usuario admin en producción...');
+        try {
+          await AdminUser.createDefaultAdmin();
+          console.log('✅ Usuario admin creado exitosamente en producción');
+        } catch (adminError) {
+          console.error('❌ Error creando admin:', adminError.message);
+          // No fallar por esto
+        }
       } else {
         console.log('⚠️ Variables ADMIN_USERNAME y ADMIN_PASSWORD no configuradas');
       }
@@ -33,12 +38,8 @@ const syncDatabase = async () => {
     console.error('❌ Error sincronizando modelos:', error);
     console.error('Stack trace:', error.stack);
 
-    // En producción, no fallar si hay error de sincronización
-    if (process.env.NODE_ENV !== 'development') {
-      console.log('⚠️ Continuando sin sincronización automática...');
-    } else {
-      throw error;
-    }
+    // En producción, intentar continuar de todas formas
+    console.log('⚠️ Intentando continuar sin sincronización automática...');
   }
 };
 
