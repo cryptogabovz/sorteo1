@@ -48,7 +48,19 @@ class AdminController {
 
       // Buscar usuario admin
       console.log('🔍 Buscando usuario en BD...');
-      let admin = await AdminUser.findOne({ where: { username } });
+      let admin;
+
+      try {
+        admin = await AdminUser.findOne({ where: { username } });
+        console.log(`✅ Consulta a BD exitosa, resultado: ${admin ? 'encontrado' : 'no encontrado'}`);
+      } catch (dbError) {
+        console.error('❌ Error consultando BD:', dbError.message);
+        console.error('Stack BD:', dbError.stack);
+        return res.render('admin/login', {
+          title: 'Login Administrador',
+          error: 'Error de base de datos'
+        });
+      }
 
       if (!admin) {
         console.log(`❌ Usuario '${username}' no encontrado en BD`);
@@ -75,11 +87,14 @@ class AdminController {
             console.error('Stack create:', createError.stack);
             return res.render('admin/login', {
               title: 'Login Administrador',
-              error: 'Error interno del servidor'
+              error: 'Error creando usuario administrador'
             });
           }
         } else {
           console.log('❌ No se puede crear usuario: variables no configuradas o usuario no coincide');
+          console.log(`   adminUsername configurado: ${!!config.adminUsername}`);
+          console.log(`   adminPassword configurado: ${!!config.adminPassword}`);
+          console.log(`   username coincide: ${username === config.adminUsername}`);
           return res.render('admin/login', {
             title: 'Login Administrador',
             error: 'Credenciales inválidas'
