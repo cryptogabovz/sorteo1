@@ -151,7 +151,12 @@ class AdminController {
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
-        res.redirect('/admin/dashboard');
+
+        // Usar setTimeout para asegurar que la sesión se guarde completamente
+        setTimeout(() => {
+          console.log('⏰ Redirigiendo a dashboard después de timeout...');
+          res.redirect('/admin/dashboard');
+        }, 100);
       });
 
     } catch (error) {
