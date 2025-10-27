@@ -92,6 +92,15 @@ class AdminController {
             });
           }
         }
+
+        // Verificar que admin esté definido antes de continuar
+        if (!admin) {
+          console.log('❌ Error: Variable admin no está definida después de búsqueda/creación');
+          return res.render('admin/login', {
+            title: 'Login Administrador',
+            error: 'Error interno del servidor'
+          });
+        }
       } else {
         console.log('❌ Credenciales no válidas contra variables de entorno');
         console.log(`   adminUsername configurado: ${!!config.adminUsername}`);
@@ -100,15 +109,6 @@ class AdminController {
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Credenciales inválidas'
-        });
-      }
-
-      // Verificar que admin esté definido antes de continuar
-      if (!admin) {
-        console.log('❌ Error: Variable admin no está definida');
-        return res.render('admin/login', {
-          title: 'Login Administrador',
-          error: 'Error interno del servidor'
         });
       }
 
