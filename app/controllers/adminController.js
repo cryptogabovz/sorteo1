@@ -15,6 +15,7 @@ class AdminController {
       const { username, password } = req.body;
 
       console.log(`🔐 Intento de login: usuario '${username}'`);
+      console.log(`📝 Datos recibidos - Username: '${username}', Password length: ${password ? password.length : 0}`);
 
       if (!username || !password) {
         console.log('❌ Login fallido: campos vacíos');
@@ -24,6 +25,13 @@ class AdminController {
         });
       }
 
+      // Mostrar configuración actual
+      const config = require('../config/env');
+      console.log('⚙️ Configuración actual:');
+      console.log(`   - ADMIN_USERNAME: '${config.adminUsername}'`);
+      console.log(`   - ADMIN_PASSWORD length: ${config.adminPassword ? config.adminPassword.length : 0}`);
+      console.log(`   - NODE_ENV: '${config.nodeEnv}'`);
+
       // Verificar conexión a BD primero
       const { sequelize } = require('../config/database');
       try {
@@ -31,6 +39,7 @@ class AdminController {
         console.log('✅ Conexión a BD OK');
       } catch (dbError) {
         console.error('❌ Error de conexión a BD:', dbError.message);
+        console.error('Stack BD:', dbError.stack);
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Error de conexión a la base de datos'
@@ -39,31 +48,38 @@ class AdminController {
 
       // Buscar usuario admin
       console.log('🔍 Buscando usuario en BD...');
-      const admin = await AdminUser.findOne({ where: { username } });
+      let admin = await AdminUser.findOne({ where: { username } });
+
       if (!admin) {
-        console.log(`❌ Login fallido: usuario '${username}' no encontrado en BD`);
+        console.log(`❌ Usuario '${username}' no encontrado en BD`);
 
         // Intentar crear usuario si no existe y tenemos las variables
-        const config = require('../config/env');
         if (config.adminUsername && config.adminPassword && username === config.adminUsername) {
           console.log('🔧 Intentando crear usuario admin...');
+          console.log(`   Creando usuario: '${config.adminUsername}' con password length: ${config.adminPassword.length}`);
+
           try {
-            await AdminUser.createDefaultAdmin();
-            const newAdmin = await AdminUser.findOne({ where: { username } });
-            if (newAdmin) {
-              console.log('✅ Usuario admin creado exitosamente');
-              // Continuar con el login del usuario recién creado
-            } else {
-              throw new Error('No se pudo crear el usuario admin');
-            }
+            // Crear directamente en lugar de usar el método
+            const bcrypt = require('bcrypt');
+            const saltRounds = 12;
+            const hashedPassword = await bcrypt.hash(config.adminPassword, saltRounds);
+
+            admin = await AdminUser.create({
+              username: config.adminUsername,
+              password_hash: hashedPassword
+            });
+
+            console.log(`✅ Usuario admin creado exitosamente: ID ${admin.id}`);
           } catch (createError) {
             console.error('❌ Error creando usuario admin:', createError.message);
+            console.error('Stack create:', createError.stack);
             return res.render('admin/login', {
               title: 'Login Administrador',
               error: 'Error interno del servidor'
             });
           }
         } else {
+          console.log('❌ No se puede crear usuario: variables no configuradas o usuario no coincide');
           return res.render('admin/login', {
             title: 'Login Administrador',
             error: 'Credenciales inválidas'
@@ -71,14 +87,15 @@ class AdminController {
         }
       }
 
-      const finalAdmin = await AdminUser.findOne({ where: { username } });
-      console.log(`✅ Usuario encontrado: ${finalAdmin.username}, ID: ${finalAdmin.id}`);
+      console.log(`✅ Usuario encontrado: ${admin.username}, ID: ${admin.id}`);
 
       // Verificar contraseña
       console.log('🔐 Verificando contraseña...');
-      const isValidPassword = await finalAdmin.checkPassword(password);
+      const isValidPassword = await admin.checkPassword(password);
       if (!isValidPassword) {
         console.log(`❌ Login fallido: contraseña incorrecta para usuario '${username}'`);
+        console.log(`   Contraseña proporcionada length: ${password.length}`);
+        console.log(`   Hash almacenado: ${admin.password_hash.substring(0, 20)}...`);
         return res.render('admin/login', {
           title: 'Login Administrador',
           error: 'Credenciales inválidas'
@@ -88,16 +105,18 @@ class AdminController {
       console.log(`✅ Contraseña válida para usuario '${username}'`);
 
       // Crear sesión
-      req.session.adminId = finalAdmin.id;
-      req.session.adminUsername = finalAdmin.username;
+      req.session.adminId = admin.id;
+      req.session.adminUsername = admin.username;
       req.session.adminLoggedIn = true;
 
       console.log(`🎉 Login exitoso: usuario '${username}' autenticado, redirigiendo a dashboard`);
+      console.log(`   Sesión creada: adminId=${admin.id}, adminUsername='${admin.username}'`);
 
       // Forzar guardado de sesión antes de redirigir
       req.session.save((err) => {
         if (err) {
           console.error('❌ Error guardando sesión:', err);
+          console.error('Stack session:', err.stack);
           return res.render('admin/login', {
             title: 'Login Administrador',
             error: 'Error interno del servidor'
