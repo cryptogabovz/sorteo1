@@ -103,6 +103,15 @@ class AdminController {
         });
       }
 
+      // Verificar que admin esté definido antes de continuar
+      if (!admin) {
+        console.log('❌ Error: Variable admin no está definida');
+        return res.render('admin/login', {
+          title: 'Login Administrador',
+          error: 'Error interno del servidor'
+        });
+      }
+
       console.log(`✅ Usuario encontrado: ${admin.username}, ID: ${admin.id}`);
 
       // Verificar contraseña
