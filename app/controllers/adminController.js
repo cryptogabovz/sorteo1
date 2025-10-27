@@ -139,6 +139,18 @@ class AdminController {
           });
         }
         console.log('💾 Sesión guardada correctamente');
+
+        // Verificar que la sesión se guardó correctamente
+        console.log('🔍 Verificando sesión después de guardar:', {
+          adminId: req.session.adminId,
+          adminUsername: req.session.adminUsername,
+          adminLoggedIn: req.session.adminLoggedIn
+        });
+
+        // Redirigir con headers para forzar recarga
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
         res.redirect('/admin/dashboard');
       });
 
@@ -167,6 +179,18 @@ class AdminController {
   // Mostrar dashboard
   async showDashboard(req, res) {
     try {
+      console.log('📊 Acceso a dashboard - Sesión:', {
+        adminId: req.session.adminId,
+        adminUsername: req.session.adminUsername,
+        adminLoggedIn: req.session.adminLoggedIn
+      });
+
+      // Verificar que la sesión sea válida
+      if (!req.session.adminId || !req.session.adminLoggedIn) {
+        console.log('❌ Sesión inválida, redirigiendo a login');
+        return res.redirect('/admin');
+      }
+
       // Obtener estadísticas
       const stats = await Participant.getStats();
 
@@ -198,13 +222,14 @@ class AdminController {
 
       res.render('admin/dashboard', {
         title: 'Dashboard Administrador',
+        adminUsername: req.session.adminUsername,
         stats,
         recentParticipants,
         webhookInfo
       });
 
     } catch (error) {
-      console.error('Error cargando dashboard:', error);
+      console.error('❌ Error cargando dashboard:', error);
       console.error('Stack trace:', error.stack);
 
       // En caso de error de BD, devolver valores por defecto
@@ -217,6 +242,7 @@ class AdminController {
 
       res.render('admin/dashboard', {
         title: 'Dashboard Administrador',
+        adminUsername: req.session.adminUsername || 'Admin',
         stats: defaultStats,
         recentParticipants: [],
         webhookInfo: null,
