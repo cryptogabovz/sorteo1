@@ -5,13 +5,25 @@ const AdminUser = require('./AdminUser');
 // Sincronizar modelos con la base de datos
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('✅ Modelos sincronizados con la base de datos');
+    // En producción, no sincronizar automáticamente para evitar problemas
+    if (process.env.NODE_ENV === 'development') {
+      await sequelize.sync({ alter: true });
+      console.log('✅ Modelos sincronizados con la base de datos (development)');
 
-    // Crear admin por defecto
-    await AdminUser.createDefaultAdmin();
+      // Crear admin por defecto solo en desarrollo
+      await AdminUser.createDefaultAdmin();
+    } else {
+      console.log('ℹ️ Modo producción: No se sincronizan modelos automáticamente');
+      console.log('ℹ️ Asegúrate de que las tablas existan en la base de datos');
+    }
   } catch (error) {
     console.error('❌ Error sincronizando modelos:', error);
+    // En producción, no fallar si hay error de sincronización
+    if (process.env.NODE_ENV !== 'development') {
+      console.log('⚠️ Continuando sin sincronización automática...');
+    } else {
+      throw error;
+    }
   }
 };
 
