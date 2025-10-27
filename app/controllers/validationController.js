@@ -21,11 +21,13 @@ class ValidationController {
         source: 'sorteo-web'
       };
 
-      // Llamar a webhook de n8n
+      // Llamar a webhook de n8n con autenticación Basic Auth
+      const auth = Buffer.from(`${config.n8nWebhookUser}:${config.n8nWebhookPass}`).toString('base64');
       const response = await axios.post(config.n8nWebhookUrl, payload, {
         timeout: 30000, // 30 segundos timeout
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${auth}`
         }
       });
 
@@ -90,11 +92,13 @@ class ValidationController {
         source: 'sorteo-web-upload'
       };
 
-      // Llamar a webhook de n8n
+      // Llamar a webhook de n8n con autenticación Basic Auth
+      const auth = Buffer.from(`${config.n8nWebhookUser}:${config.n8nWebhookPass}`).toString('base64');
       const response = await axios.post(config.n8nWebhookUrl, payload, {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${auth}`
         }
       });
 
