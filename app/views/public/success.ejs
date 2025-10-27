@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="text-center py-4 bg-success text-white">
+            <h1 class="display-6">🎉 ¡Registro Exitoso!</h1>
+            <p class="mb-0">Ya eres parte del sorteo</p>
+        </header>
+
+        <!-- Contenido principal -->
+        <main class="container my-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <!-- Mensaje de éxito -->
+                    <div class="card shadow border-success">
+                        <div class="card-body text-center p-5">
+                            <div class="success-icon mb-4">🎊</div>
+                            <h2 class="card-title text-success mb-4">¡Felicitaciones!</h2>
+                            <p class="card-text mb-4">
+                                Tu registro ha sido completado exitosamente.
+                                Ya eres participante oficial del sorteo.
+                            </p>
+
+                            <!-- Número asignado -->
+                            <div class="ticket-number mb-4">
+                                <div class="ticket-label">Tu número de participación:</div>
+                                <div class="ticket-value" id="ticketNumber"><%= data.ticketNumber %></div>
+                            </div>
+
+                            <!-- Información del participante -->
+                            <div class="participant-info mb-4">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <strong>Nombre:</strong><br>
+                                        <%= data.name %> <%= data.lastName %>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <strong>Número:</strong><br>
+                                        <%= data.ticketNumber %>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Instrucciones -->
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">📅 Próximos pasos:</h6>
+                                <ul class="mb-0 text-start">
+                                    <li>Guarda este número para futuras referencias</li>
+                                    <li>El sorteo se realizará en fecha por anunciar</li>
+                                    <li>Te contactaremos si resultas ganador</li>
+                                    <li>Mantén tu información actualizada</li>
+                                </ul>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="mt-4">
+                                <button onclick="window.print()" class="btn btn-outline-primary me-2">
+                                    🖨️ Imprimir
+                                </button>
+                                <a href="/" class="btn btn-success">
+                                    🏠 Ir al inicio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="text-center mt-3 text-muted">
+                        <small>
+                            Recuerda que este número es único e intransferible.<br>
+                            ¡Mucha suerte en el sorteo!
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-dark text-white text-center py-3">
+            <div class="container">
+                <p>&copy; 2024 Sistema de Sorteo. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para imprimir solo la información relevante
+        function printTicket() {
+            window.print();
+        }
+
+        // Auto-impresión opcional (comentado)
+        // window.onload = function() {
+        //     setTimeout(function() {
+        //         window.print();
+        //     }, 1000);
+        // };
+    </script>
+</body>
+</html>
