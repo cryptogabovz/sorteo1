@@ -7,7 +7,7 @@ const sessionConfig = session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Deshabilitar secure para desarrollo local (localhost)
+    secure: config.nodeEnv === 'production', // HTTPS en producción, HTTP en desarrollo
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
     sameSite: 'lax' // Protección CSRF
