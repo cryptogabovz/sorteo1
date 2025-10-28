@@ -164,6 +164,14 @@ class ValidationController {
         // Respuesta asíncrona esperada - n8n responderá por webhook
         console.log(`⏳ Validación asíncrona iniciada - Esperando respuesta en webhook`);
 
+        // Guardar correlationId en sesión para que el frontend pueda hacer polling
+        req.session.pendingValidation = {
+          correlationId,
+          status: 'processing',
+          message: 'Procesando imagen...',
+          timestamp: new Date().toISOString()
+        };
+
         return res.json({
           success: true,
           message: 'Validación iniciada. Procesando imagen...',
@@ -274,6 +282,82 @@ class ValidationController {
       res.status(500).json({
         success: false,
         message: 'Error procesando respuesta de validación'
+      });
+    }
+  }
+
+  // Verificar estado de validación (para polling del frontend)
+  async checkValidationStatus(req, res) {
+    try {
+      const { correlationId } = req.params;
+
+      if (!correlationId) {
+        return res.status(400).json({
+          success: false,
+          message: 'correlationId requerido'
+        });
+      }
+
+      // Buscar validación en BD
+      const ticketValidation = await TicketValidation.findByCorrelationId(correlationId);
+
+      if (!ticketValidation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Validación no encontrada'
+        });
+      }
+
+      // Verificar si expiró
+      if (new Date() > ticketValidation.expires_at) {
+        return res.json({
+          success: true,
+          status: 'expired',
+          message: 'La validación ha expirado. Intente subir el ticket nuevamente.',
+          expired: true
+        });
+      }
+
+      // Retornar estado actual
+      const response = {
+        success: true,
+        status: ticketValidation.status,
+        correlationId: ticketValidation.correlation_id
+      };
+
+      if (ticketValidation.status === 'approved') {
+        response.valid = true;
+        response.reason = ticketValidation.reason || 'Ticket válido';
+        response.confidence = ticketValidation.confidence;
+        response.nextStep = 'register';
+
+        // Guardar resultado en sesión para el registro
+        req.session.validationResult = {
+          correlationId,
+          valid: true,
+          reason: ticketValidation.reason || 'Ticket válido',
+          confidence: ticketValidation.confidence || 0,
+          ticketImageUrl: `/uploads/${ticketValidation.image_filename}`,
+          tempFile: ticketValidation.image_filename
+        };
+
+      } else if (ticketValidation.status === 'rejected') {
+        response.valid = false;
+        response.reason = ticketValidation.reason || 'Ticket no válido';
+        response.confidence = ticketValidation.confidence;
+        response.nextStep = 'retry';
+      } else {
+        // Aún pendiente
+        response.message = 'Procesando imagen...';
+      }
+
+      res.json(response);
+
+    } catch (error) {
+      console.error('❌ Error verificando estado de validación:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
       });
     }
   }

@@ -65,4 +65,7 @@ router.get('/api/stats', participantController.getPublicStats);
 // Webhook: Recibir respuesta de validación de n8n
 router.post('/api/webhook/validation-response', validationController.receiveValidationResponse);
 
+// API: Verificar estado de validación (para polling)
+router.get('/api/validation-status/:correlationId', validationController.checkValidationStatus);
+
 module.exports = router;

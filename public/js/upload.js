@@ -128,17 +128,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (result.success) {
-                if (result.valid) {
+                if (result.nextStep === 'register') {
                     // Ticket válido, redirigir a registro
                     showMessage('¡Ticket válido! Redirigiendo...', 'success');
                     setTimeout(() => {
                         window.location.href = '/registro';
                     }, 1500);
-                } else {
+                } else if (result.nextStep === 'wait') {
+                    // Validación asíncrona - mostrar pantalla de espera
+                    showProcessingScreen(result.correlationId);
+                } else if (result.nextStep === 'retry') {
                     // Ticket inválido
                     showMessage(`Ticket rechazado: ${result.reason}`, 'danger');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = 'Validar Ticket';
+                } else {
+                    // Ticket válido (síncrono)
+                    showMessage('¡Ticket válido! Redirigiendo...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/registro';
+                    }, 1500);
                 }
             } else {
                 showMessage(result.message || 'Error al procesar el ticket', 'danger');
@@ -152,6 +161,74 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Validar Ticket';
         }
+    }
+
+    function showProcessingScreen(correlationId) {
+        // Ocultar formulario y mostrar pantalla de procesamiento
+        document.getElementById('uploadForm').style.display = 'none';
+        document.getElementById('processingScreen').style.display = 'block';
+
+        // Iniciar polling para verificar estado
+        let pollCount = 0;
+        const maxPolls = 60; // Máximo 60 segundos (1 poll por segundo)
+
+        const pollInterval = setInterval(async () => {
+            try {
+                pollCount++;
+
+                const response = await fetch(`/api/validation-status/${correlationId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.status === 'approved') {
+                        // Validación exitosa
+                        clearInterval(pollInterval);
+                        showMessage('¡Ticket válido! Redirigiendo...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/registro';
+                        }, 1500);
+                    } else if (result.status === 'rejected') {
+                        // Validación rechazada
+                        clearInterval(pollInterval);
+                        hideProcessingScreen();
+                        showMessage(`Ticket rechazado: ${result.reason}`, 'danger');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Validar Ticket';
+                    } else if (result.status === 'expired') {
+                        // Validación expirada
+                        clearInterval(pollInterval);
+                        hideProcessingScreen();
+                        showMessage('La validación ha expirado. Intente nuevamente.', 'warning');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Validar Ticket';
+                    } else if (pollCount >= maxPolls) {
+                        // Timeout
+                        clearInterval(pollInterval);
+                        hideProcessingScreen();
+                        showMessage('Tiempo de espera agotado. Intente nuevamente.', 'warning');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Validar Ticket';
+                    }
+                    // Si aún está pendiente, continuar polling
+                } else {
+                    console.error('Error en polling:', result.message);
+                }
+            } catch (error) {
+                console.error('Error en polling:', error);
+                if (pollCount >= maxPolls) {
+                    clearInterval(pollInterval);
+                    hideProcessingScreen();
+                    showMessage('Error de conexión. Intente nuevamente.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Validar Ticket';
+                }
+            }
+        }, 1000); // Poll cada segundo
+    }
+
+    function hideProcessingScreen() {
+        document.getElementById('uploadForm').style.display = 'block';
+        document.getElementById('processingScreen').style.display = 'none';
     }
 
     function showMessage(message, type) {
