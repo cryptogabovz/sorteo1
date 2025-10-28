@@ -142,6 +142,9 @@ document.addEventListener('DOMContentLoaded', function() {
         fileName.textContent = file.name;
         fileInfo.style.display = 'flex';
 
+        // Mostrar vista previa inmediatamente
+        showImagePreview(file);
+
         // Habilitar botón de envío
         submitBtn.disabled = false;
 
@@ -158,12 +161,41 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedFile = null;
         fileInput.value = '';
         fileInfo.style.display = 'none';
+        hideImagePreview(); // Ocultar vista previa
         submitBtn.disabled = true;
         showMessage('', '');
     }
 
     // Hacer removeFile disponible globalmente
     window.removeFile = removeFile;
+
+    function showImagePreview(file) {
+        const previewContainer = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+
+        if (!previewContainer || !previewImage) {
+            console.error('Elementos de vista previa no encontrados');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'block';
+            console.log('Vista previa de imagen mostrada inmediatamente');
+        };
+        reader.onerror = function(error) {
+            console.error('Error cargando vista previa:', error);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function hideImagePreview() {
+        const previewContainer = document.getElementById('imagePreview');
+        if (previewContainer) {
+            previewContainer.style.display = 'none';
+        }
+    }
 
     async function handleSubmit(e) {
         e.preventDefault();
