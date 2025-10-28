@@ -55,13 +55,16 @@
                                 </div>
                             </div>
 
-                            <!-- Vista previa de imagen seleccionada (modo grande) -->
-                            <div id="imagePreview" class="image-preview-large mb-4" style="display: none;">
-                                <div class="preview-frame-large">
-                                    <img id="previewImage" src="" alt="Vista previa" class="img-fluid preview-ticket-large">
-                                    <div class="preview-info">
-                                        <span class="preview-text">Imagen lista para validar</span>
-                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFile()">
+                            <!-- Cuadro unificado para vista previa y escaneo -->
+                            <div id="imagePreview" class="image-unified-container mb-4" style="display: none;">
+                                <div class="unified-frame">
+                                    <img id="previewImage" src="" alt="Vista previa" class="img-fluid unified-image">
+                                    <!-- Barra de escaneo (inicialmente oculta) -->
+                                    <div class="scanner-line" id="scannerLine" style="display: none;"></div>
+                                    <!-- Información inferior -->
+                                    <div class="unified-info" id="unifiedInfo">
+                                        <span class="unified-text" id="unifiedText">Imagen lista para validar</span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="changeBtn" onclick="removeFile()">
                                             <i class="fas fa-times"></i> Cambiar
                                         </button>
                                     </div>

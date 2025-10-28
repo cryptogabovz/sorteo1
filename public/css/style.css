@@ -701,14 +701,16 @@ footer {
     border: 1px solid var(--brand-blue);
 }
 
-/* Vista previa grande (modo único) */
-.image-preview-large {
+/* Cuadro unificado para vista previa y escaneo */
+.image-unified-container {
     display: flex;
     justify-content: center;
+    align-items: center;
     margin: 30px 0;
+    min-height: 200px;
 }
 
-.preview-frame-large {
+.unified-frame {
     position: relative;
     display: inline-block;
     border: 3px solid var(--brand-blue);
@@ -717,9 +719,10 @@ footer {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
     max-width: 100%;
+    overflow: hidden;
 }
 
-.preview-ticket-large {
+.unified-image {
     max-width: 500px;
     max-height: 400px;
     border-radius: 10px;
@@ -729,7 +732,7 @@ footer {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.preview-info {
+.unified-info {
     position: absolute;
     bottom: 15px;
     left: 15px;
@@ -742,4 +745,24 @@ footer {
     border-radius: 25px;
     border: 2px solid var(--brand-blue);
     backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+/* Estado de escaneo */
+.unified-frame.scanning {
+    animation: scanningPulse 2s ease-in-out infinite;
+}
+
+.unified-frame.scanning .unified-info {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+@keyframes scanningPulse {
+    0%, 100% {
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 8px 35px rgba(40, 167, 69, 0.5);
+    }
 }

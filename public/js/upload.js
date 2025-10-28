@@ -263,26 +263,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showProcessingScreen(correlationId) {
-        // Ocultar contenedor de subida y mostrar pantalla de procesamiento
-        document.getElementById('uploadContainer').style.display = 'none';
-        document.getElementById('processingScreen').style.display = 'block';
+        console.log('🚀 Iniciando modo escaneo en el mismo cuadro...');
 
-        // Mostrar la imagen subida en el escáner INMEDIATAMENTE (desde el navegador)
-        const scannedImage = document.getElementById('scannedImage');
-        if (selectedFile && scannedImage) {
-            console.log('Mostrando imagen inmediatamente desde navegador...');
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                scannedImage.src = e.target.result;
-                scannedImage.style.display = 'block';
-                console.log('Imagen mostrada exitosamente en escáner');
-            };
-            reader.onerror = function(error) {
-                console.error('Error cargando imagen:', error);
-            };
-            reader.readAsDataURL(selectedFile);
+        // Cambiar el marco a modo escaneo
+        const unifiedFrame = document.querySelector('.unified-frame');
+        const scannerLine = document.getElementById('scannerLine');
+        const unifiedInfo = document.getElementById('unifiedInfo');
+        const unifiedText = document.getElementById('unifiedText');
+
+        if (unifiedFrame && scannerLine && unifiedInfo && unifiedText) {
+            // Agregar clase de escaneo
+            unifiedFrame.classList.add('scanning');
+
+            // Mostrar barra de escaneo
+            scannerLine.style.display = 'block';
+
+            // Cambiar texto y ocultar botón
+            unifiedText.textContent = 'Escaneando imagen...';
+            document.getElementById('changeBtn').style.display = 'none';
+
+            // Atenuar información
+            unifiedInfo.style.opacity = '0.7';
+
+            console.log('✅ Modo escaneo activado - barra visible, controles ocultos');
         } else {
-            console.error('No hay archivo seleccionado o elemento de imagen no encontrado');
+            console.error('❌ Elementos del modo escaneo no encontrados');
         }
 
         // Iniciar Lottie animation (si existe)
@@ -311,6 +316,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (lottieAnimation) {
                             lottieAnimation.stop();
                         }
+
+                        // Restaurar apariencia del marco
+                        const unifiedFrame = document.querySelector('.unified-frame');
+                        const scannerLine = document.getElementById('scannerLine');
+                        const unifiedInfo = document.getElementById('unifiedInfo');
+                        const unifiedText = document.getElementById('unifiedText');
+
+                        if (unifiedFrame && scannerLine && unifiedInfo && unifiedText) {
+                            unifiedFrame.classList.remove('scanning');
+                            scannerLine.style.display = 'none';
+                            unifiedText.textContent = '¡Ticket válido!';
+                            unifiedInfo.style.opacity = '1';
+                        }
+
                         console.log('✅ Validación exitosa - Redirigiendo a registro');
                         console.log('Sesión actual:', result);
                         showMessage('¡Ticket válido! Redirigiendo...', 'success');
@@ -318,12 +337,29 @@ document.addEventListener('DOMContentLoaded', function() {
                             window.location.href = '/registro';
                         }, 1500);
                     } else if (result.status === 'rejected') {
-                        // Validación rechazada - mostrar en pantalla de procesamiento
+                        // Validación rechazada
                         clearInterval(pollInterval);
                         if (lottieAnimation) {
                             lottieAnimation.stop();
                         }
-                        showProcessingError(result.reason || 'Ticket no válido');
+
+                        // Restaurar apariencia del marco
+                        const unifiedFrame = document.querySelector('.unified-frame');
+                        const scannerLine = document.getElementById('scannerLine');
+                        const unifiedInfo = document.getElementById('unifiedInfo');
+                        const unifiedText = document.getElementById('unifiedText');
+                        const changeBtn = document.getElementById('changeBtn');
+
+                        if (unifiedFrame && scannerLine && unifiedInfo && unifiedText && changeBtn) {
+                            unifiedFrame.classList.remove('scanning');
+                            scannerLine.style.display = 'none';
+                            unifiedText.textContent = 'Ticket rechazado - Intente con otra imagen';
+                            unifiedInfo.style.opacity = '1';
+                            changeBtn.style.display = 'inline-block';
+                        }
+
+                        console.log('❌ Validación rechazada:', result.reason);
+                        showMessage(`Ticket rechazado: ${result.reason || 'Imagen no válida'}`, 'danger');
                     } else if (result.status === 'expired') {
                         // Validación expirada - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
