@@ -13,23 +13,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializar Lottie animation
     function initLottie() {
+        const container = document.getElementById('lottieContainer');
+        if (!container) {
+            console.error('Lottie container not found');
+            return;
+        }
+
         if (typeof lottie !== 'undefined') {
+            console.log('Loading Lottie animation from /images/search.lottie');
+
             lottieAnimation = lottie.loadAnimation({
-                container: document.getElementById('lottieContainer'),
+                container: container,
                 renderer: 'svg',
                 loop: true,
                 autoplay: false,
                 path: '/images/search.lottie'
             });
 
+            // Event listeners para debugging
+            lottieAnimation.addEventListener('data_ready', function() {
+                console.log('Lottie data loaded successfully');
+            });
+
+            lottieAnimation.addEventListener('loaded_images', function() {
+                console.log('Lottie images loaded');
+            });
+
+            lottieAnimation.addEventListener('DOMLoaded', function() {
+                console.log('Lottie DOM loaded');
+            });
+
+            lottieAnimation.addEventListener('error', function(error) {
+                console.error('Lottie loading error:', error);
+            });
+
             // Asegurar que el contenedor sea visible
-            const container = document.getElementById('lottieContainer');
-            if (container) {
-                container.style.display = 'block';
-                container.style.opacity = '1';
-            }
+            container.style.display = 'block';
+            container.style.opacity = '1';
+            container.style.width = '300px';
+            container.style.height = '300px';
+            container.style.margin = '0 auto';
+            container.style.background = 'transparent';
+
         } else {
-            console.error('Lottie library not loaded');
+            console.error('Lottie library not loaded - check if CDN is working');
+            // Fallback: mostrar un spinner de Bootstrap
+            container.innerHTML = `
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
         }
     }
 
