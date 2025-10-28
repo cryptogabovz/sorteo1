@@ -142,7 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fileName.textContent = file.name;
         fileInfo.style.display = 'flex';
 
-        // Mostrar vista previa inmediatamente
+        // Ocultar área de drop y mostrar vista previa grande
+        document.getElementById('dropArea').style.display = 'none';
         showImagePreview(file);
 
         // Habilitar botón de envío
@@ -161,7 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedFile = null;
         fileInput.value = '';
         fileInfo.style.display = 'none';
-        hideImagePreview(); // Ocultar vista previa
+        hideImagePreview(); // Ocultar vista previa grande
+        document.getElementById('dropArea').style.display = 'block'; // Mostrar área de drop nuevamente
         submitBtn.disabled = true;
         showMessage('', '');
     }

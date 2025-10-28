@@ -55,12 +55,15 @@
                                 </div>
                             </div>
 
-                            <!-- Vista previa de imagen seleccionada -->
-                            <div id="imagePreview" class="image-preview-container mb-4" style="display: none;">
-                                <div class="preview-frame">
-                                    <img id="previewImage" src="" alt="Vista previa" class="img-fluid preview-ticket">
-                                    <div class="preview-overlay">
-                                        <span class="preview-text">Imagen seleccionada</span>
+                            <!-- Vista previa de imagen seleccionada (modo grande) -->
+                            <div id="imagePreview" class="image-preview-large mb-4" style="display: none;">
+                                <div class="preview-frame-large">
+                                    <img id="previewImage" src="" alt="Vista previa" class="img-fluid preview-ticket-large">
+                                    <div class="preview-info">
+                                        <span class="preview-text">Imagen lista para validar</span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFile()">
+                                            <i class="fas fa-times"></i> Cambiar
+                                        </button>
                                     </div>
                                 </div>
                             </div>
