@@ -114,9 +114,18 @@ class AdminController {
 
       // Verificar contraseña
       console.log('🔐 Verificando contraseña...');
-      console.log(`✅ Usuario encontrado: ${admin.username}, ID: ${admin.id}`);
-      console.log(`🔍 Verificando contraseña para usuario: ${admin.username}`);
+      console.log(`✅ Usuario encontrado: ${admin ? admin.username : 'UNDEFINED'}, ID: ${admin ? admin.id : 'UNDEFINED'}`);
+      console.log(`🔍 Verificando contraseña para usuario: ${admin ? admin.username : 'UNDEFINED'}`);
       console.log(`🔍 Tipo de admin: ${typeof admin}, admin es null: ${admin === null}, admin es undefined: ${admin === undefined}`);
+
+      if (!admin) {
+        console.log('❌ ERROR CRÍTICO: Variable admin es null/undefined antes de checkPassword');
+        return res.render('admin/login', {
+          title: 'Login Administrador',
+          error: 'Error interno del servidor - usuario no encontrado'
+        });
+      }
+
       const isValidPassword = await admin.checkPassword(password);
       if (!isValidPassword) {
         console.log(`❌ Login fallido: contraseña incorrecta para usuario '${username}'`);
