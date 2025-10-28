@@ -1,3 +1,16 @@
+/* Variables de color de marca */
+:root {
+    --brand-red: #D62A34;
+    --brand-gray: #D2D2D2;
+    --brand-blue: #003372;
+    --brand-sky-blue: #6AA5D8;
+    --text-dark: #2C3E50;
+    --text-light: #6C757D;
+    --bg-light: #F8F9FA;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --border-radius: 12px;
+}
+
 /* Header fijo */
 .fixed-header {
     position: fixed;
@@ -5,15 +18,17 @@
     left: 0;
     right: 0;
     background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow);
     z-index: 1000;
-    padding: 10px 0;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--brand-gray);
 }
 
 .header-title {
     font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
 }
 
 .header-logo {
@@ -24,7 +39,7 @@
 
 /* Ajustar contenido principal para header fijo */
 .main-content {
-    margin-top: 80px;
+    margin-top: 90px;
 }
 
 /* Estilos generales */
@@ -35,38 +50,64 @@ body {
 
 /* Header principal */
 .bg-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-blue) 100%) !important;
 }
 
 /* Cards */
 .card {
     border: none;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: white;
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
 /* Botones */
 .btn {
-    border-radius: 25px;
-    padding: 10px 30px;
+    border-radius: 8px;
+    padding: 12px 24px;
     font-weight: 600;
     transition: all 0.3s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
 }
 
+.btn-primary {
+    background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-blue) 100%);
+    color: white;
+}
+
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(214, 42, 52, 0.3);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-red) 100%);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--brand-blue);
+    color: var(--brand-blue);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--brand-blue);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+    border: 2px solid var(--brand-gray);
+    color: var(--text-dark);
+    background: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background: var(--brand-gray);
+    color: var(--text-dark);
 }
 
 .btn-success {
@@ -82,7 +123,7 @@ body {
 /* Iconos de pasos */
 .step-icon {
     font-size: 3rem;
-    color: #667eea;
+    color: var(--brand-blue);
     margin-bottom: 1rem;
 }
 
@@ -99,8 +140,8 @@ body {
 
 .drop-area:hover,
 .drop-area.dragover {
-    border-color: #667eea;
-    background: #f0f2ff;
+    border-color: var(--brand-blue);
+    background: rgba(106, 165, 216, 0.1);
 }
 
 .drop-content .drop-icon {
@@ -133,10 +174,10 @@ body {
 
 /* Número de ticket */
 .ticket-number {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-blue) 100%);
     color: white;
     padding: 20px;
-    border-radius: 15px;
+    border-radius: var(--border-radius);
     text-align: center;
     margin: 20px 0;
 }
@@ -169,13 +210,13 @@ body {
 
 /* Formularios */
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 114, 0.25);
 }
 
 .form-select:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 114, 0.25);
 }
 
 /* Alertas */
