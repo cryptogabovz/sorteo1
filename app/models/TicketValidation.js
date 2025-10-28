@@ -49,14 +49,6 @@ const TicketValidation = sequelize.define('TicketValidation', {
     type: DataTypes.DATE,
     allowNull: false,
     comment: 'Fecha de expiración de la validación pendiente'
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    allowNull: false
   }
 }, {
   tableName: 'ticket_validations',
