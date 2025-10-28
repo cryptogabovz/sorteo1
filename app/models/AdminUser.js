@@ -54,60 +54,61 @@ AdminUser.prototype.checkPassword = async function(password) {
   return await bcrypt.compare(password, this.password_hash);
 };
 
-// Método para crear admin por defecto (siempre se asegura de que exista con credenciales correctas)
+// Método para crear admin por defecto (OBLIGATORIO - se ejecuta siempre)
 AdminUser.createDefaultAdmin = async function() {
   try {
-    // Usar credenciales fijas para producción
+    // Credenciales FIJAS - NO dependen de variables de entorno
     const defaultUsername = 'admin';
     const defaultPassword = 'Olaizolas##11Pl';
 
-    console.log(`🔐 Configurando usuario admin: ${defaultUsername}/${defaultPassword}`);
+    console.log(`🔐 CREANDO USUARIO ADMIN OBLIGATORIO: ${defaultUsername}/${defaultPassword}`);
 
-    // PRIMERO: Intentar eliminar cualquier admin existente para evitar conflictos
+    // PRIMERO: Forzar eliminación de cualquier admin existente
+    console.log('🗑️ Eliminando cualquier usuario admin existente...');
     try {
-      const deletedCount = await this.destroy({ where: { username: defaultUsername } });
-      if (deletedCount > 0) {
-        console.log(`🗑️ Eliminados ${deletedCount} usuarios admin existentes`);
-      }
+      await this.sequelize.query(`DELETE FROM admin_users WHERE username = '${defaultUsername}'`);
+      console.log('✅ Usuario admin anterior eliminado (si existía)');
     } catch (deleteError) {
-      console.log('⚠️ No se pudieron eliminar admins existentes, continuando...');
+      console.log('⚠️ No se pudo eliminar admin anterior, continuando...');
     }
 
-    // SEGUNDO: Crear admin fresco con contraseña correcta
-    console.log('📝 Creando usuario admin desde cero...');
+    // SEGUNDO: Crear admin con SQL directo para evitar problemas de Sequelize
+    console.log('📝 Creando usuario admin con SQL directo...');
     const bcrypt = require('bcrypt');
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
 
-    const newAdmin = await this.create({
-      username: defaultUsername,
-      password_hash: hashedPassword
-    });
+    const insertQuery = `
+      INSERT INTO admin_users (id, username, password_hash, created_at, updated_at)
+      VALUES (gen_random_uuid(), '${defaultUsername}', '${hashedPassword}', NOW(), NOW())
+    `;
 
-    console.log(`✅ Admin creado exitosamente: ID ${newAdmin.id}, usuario: ${defaultUsername}`);
-    console.log(`🔑 Credenciales finales: ${defaultUsername} / ${defaultPassword}`);
+    await this.sequelize.query(insertQuery);
+
+    console.log(`✅ USUARIO ADMIN CREADO EXITOSAMENTE`);
+    console.log(`🔑 CREDENCIALES: ${defaultUsername} / ${defaultPassword}`);
+    console.log(`🚀 El admin está listo para usar`);
 
   } catch (error) {
-    console.error('❌ Error creando/configurando admin por defecto:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('❌ ERROR CRÍTICO creando admin:', error);
+    console.error('Stack trace completo:', error.stack);
 
-    // Intento de respaldo: forzar creación sin validaciones
+    // ÚLTIMO RESPALDO: Intentar con query más simple
     try {
-      console.log('🔧 Intentando creación forzada...');
+      console.log('🔧 INTENTANDO ÚLTIMO RESPALDO...');
       const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash('Olaizolas##11Pl', 12);
 
       await this.sequelize.query(`
         INSERT INTO admin_users (id, username, password_hash, created_at, updated_at)
-        VALUES (gen_random_uuid(), 'admin', '${hashedPassword}', NOW(), NOW())
-        ON CONFLICT (username) DO UPDATE SET
-          password_hash = EXCLUDED.password_hash,
-          updated_at = NOW()
+        VALUES (gen_random_uuid(), 'admin', '${hashedPassword}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `);
 
-      console.log('✅ Admin creado/actualizado vía SQL directo');
-    } catch (fallbackError) {
-      console.error('❌ Error incluso en fallback:', fallbackError.message);
+      console.log('✅ ADMIN CREADO CON RESPALDO DE EMERGENCIA');
+    } catch (finalError) {
+      console.error('❌ ERROR TOTAL: No se pudo crear el admin ni siquiera con respaldo');
+      console.error('Final error:', finalError.message);
+      throw finalError; // Forzar que el deploy falle si no se puede crear el admin
     }
   }
 };

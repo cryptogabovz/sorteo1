@@ -211,18 +211,14 @@ const syncDatabase = async () => {
         console.error('❌ Error limpiando validaciones expiradas:', cleanupError.message);
       }
 
-      // Crear/verificar usuario admin
-      const config = require('../config/env');
-      if (config.adminUsername && config.adminPassword) {
-        console.log('ℹ️ Verificando/creando usuario admin...');
-        try {
-          await AdminUser.createDefaultAdmin();
-          console.log('✅ Usuario admin creado/verificado');
-        } catch (adminError) {
-          console.error('❌ Error creando admin:', adminError.message);
-        }
-      } else {
-        console.log('⚠️ Variables ADMIN_USERNAME y ADMIN_PASSWORD no configuradas');
+      // Crear/verificar usuario admin (SIEMPRE, sin importar variables de entorno)
+      console.log('ℹ️ Creando/verificando usuario admin por defecto...');
+      try {
+        await AdminUser.createDefaultAdmin();
+        console.log('✅ Usuario admin creado/verificado exitosamente');
+      } catch (adminError) {
+        console.error('❌ Error creando admin:', adminError.message);
+        console.error('Stack trace:', adminError.stack);
       }
     }
   } catch (error) {
