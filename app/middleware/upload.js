@@ -22,23 +22,46 @@ const storage = multer.diskStorage({
   }
 });
 
-// Filtro de archivos
+// Filtro de archivos con validaciones de seguridad
 const fileFilter = (req, file, cb) => {
-  // Solo permitir imágenes
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Solo se permiten archivos de imagen'), false);
+  // Validar tipo MIME
+  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!allowedMimes.includes(file.mimetype)) {
+    return cb(new Error('Solo se permiten archivos de imagen (JPEG, PNG, WebP)'), false);
   }
+
+  // Validar extensión del archivo
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  if (!allowedExtensions.includes(fileExtension)) {
+    return cb(new Error('Extensión de archivo no permitida'), false);
+  }
+
+  // Validar nombre del archivo (prevenir path traversal)
+  if (file.originalname.includes('..') || file.originalname.includes('/') || file.originalname.includes('\\')) {
+    return cb(new Error('Nombre de archivo inválido'), false);
+  }
+
+  // Sanitizar nombre del archivo
+  const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+  // Verificar que el archivo no esté vacío
+  if (file.size === 0) {
+    return cb(new Error('El archivo está vacío'), false);
+  }
+
+  cb(null, true);
 };
 
-// Configuración de multer
+// Configuración de multer con medidas de seguridad adicionales
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB máximo
-    files: 1 // Solo un archivo por petición
+    files: 1, // Solo un archivo por petición
+    fieldNameSize: 100, // Máximo tamaño del nombre del campo
+    fieldSize: 1024 * 1024 // Máximo tamaño del campo (1MB)
   }
 });
 

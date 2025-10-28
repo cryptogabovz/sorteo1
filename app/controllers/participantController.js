@@ -6,6 +6,46 @@ class ParticipantController {
     try {
       const { name, lastName, cedula, phone, province } = req.body;
 
+      // Sanitización y validación de inputs
+      const sanitizedData = {
+        name: name?.trim().replace(/[<>\"'&]/g, ''),
+        lastName: lastName?.trim().replace(/[<>\"'&]/g, ''),
+        cedula: cedula?.trim().replace(/[^0-9]/g, ''), // Solo números
+        phone: phone?.trim().replace(/[^0-9+\-\s]/g, ''), // Solo números, espacios, + y -
+        province: province?.trim()
+      };
+
+      // Validar que todos los campos estén presentes y no vacíos
+      if (!sanitizedData.name || !sanitizedData.lastName || !sanitizedData.cedula ||
+          !sanitizedData.phone || !sanitizedData.province) {
+        return res.status(400).json({
+          success: false,
+          message: 'Todos los campos son requeridos y deben ser válidos'
+        });
+      }
+
+      // Validar longitudes mínimas
+      if (sanitizedData.name.length < 2 || sanitizedData.lastName.length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: 'Nombre y apellido deben tener al menos 2 caracteres'
+        });
+      }
+
+      if (sanitizedData.cedula.length < 5) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cédula debe tener al menos 5 dígitos'
+        });
+      }
+
+      if (sanitizedData.phone.length < 7) {
+        return res.status(400).json({
+          success: false,
+          message: 'Teléfono debe tener al menos 7 caracteres'
+        });
+      }
+
       // Validar datos requeridos
       if (!name || !lastName || !cedula || !phone || !province) {
         return res.status(400).json({
@@ -75,14 +115,14 @@ class ParticipantController {
       // Obtener próximo número de ticket
       const ticketNumber = await Participant.getNextTicketNumber();
 
-      // Crear participante
+      // Crear participante con datos sanitizados
       const participant = await Participant.create({
         ticket_number: ticketNumber,
-        name: name.trim(),
-        last_name: lastName.trim(),
-        cedula: cedula.trim(),
-        phone: phone.trim(),
-        province: province.trim(),
+        name: sanitizedData.name,
+        last_name: sanitizedData.lastName,
+        cedula: sanitizedData.cedula,
+        phone: sanitizedData.phone,
+        province: sanitizedData.province,
         ticket_validated: true,
         ticket_image_url: validationResult.ticketImageUrl || null
       });
@@ -112,12 +152,10 @@ class ParticipantController {
         });
       }
 
-      // Manejar errores de unicidad
+      // Manejar errores de unicidad - ahora permitimos múltiples registros
       if (error.name === 'SequelizeUniqueConstraintError') {
-        return res.status(400).json({
-          success: false,
-          message: 'Ya existe un registro con estos datos'
-        });
+        console.log('⚠️ Error de unicidad detectado, pero permitiendo múltiples participaciones');
+        // No devolver error, continuar normalmente
       }
 
       res.status(500).json({

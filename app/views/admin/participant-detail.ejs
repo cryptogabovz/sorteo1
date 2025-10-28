@@ -89,21 +89,67 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="detail-item">
-                                    <label class="fw-bold">Número de Ticket:</label>
-                                    <p class="mb-1 fw-bold text-primary fs-5"><%= participant.ticket_number %></p>
+                                    <label class="fw-bold">Total de Tickets:</label>
+                                    <p class="mb-1"><span class="badge bg-info text-dark fs-6"><%= allTickets.length %> ticket<%= allTickets.length > 1 ? 's' : '' %></span></p>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="detail-item">
-                                    <label class="fw-bold">Fecha de Registro:</label>
-                                    <p class="mb-1"><%= new Date(participant.created_at).toLocaleDateString('es-ES', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    }) %></p>
-                                </div>
+                        </div>
+
+                        <!-- Lista de Tickets -->
+                        <div class="tickets-list mt-4">
+                            <h4 class="section-title">
+                                <i class="fas fa-ticket-alt me-2" style="color: var(--brand-blue);"></i>
+                                Todos los Tickets de este Participante
+                            </h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Número de Ticket</th>
+                                            <th>Fecha de Registro</th>
+                                            <th>Estado</th>
+                                            <th>Imagen</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% allTickets.forEach(ticket => { %>
+                                            <tr>
+                                                <td><strong class="text-primary">#<%= ticket.ticket_number %></strong></td>
+                                                <td><%= new Date(ticket.created_at).toLocaleDateString('es-ES', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                }) %></td>
+                                                <td>
+                                                    <% if (ticket.ticket_validated) { %>
+                                                        <span class="badge bg-success">Validado</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-danger">Rechazado</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (ticket.ticket_image_url && ticket.ticket_image_url.startsWith('/uploads/')) { %>
+                                                        <button class="btn btn-sm btn-outline-secondary" onclick="openImageModal('<%= ticket.ticket_image_url %>')">
+                                                            <i class="fas fa-image"></i>
+                                                        </button>
+                                                    <% } else { %>
+                                                        <span class="text-muted">-</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                            onclick="deleteTicket(<%= ticket.id %>, '<%= ticket.ticket_number %>')"
+                                                            title="Eliminar este ticket">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -210,6 +256,33 @@
 
             const modal = new bootstrap.Modal(document.getElementById('imageModal'));
             modal.show();
+        }
+
+        async function deleteTicket(ticketId, ticketNumber) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el ticket ${ticketNumber}? Esta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/participants/${ticketId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Ticket ${ticketNumber} eliminado exitosamente`);
+                    location.reload(); // Recargar la página para actualizar la lista
+                } else {
+                    alert('Error al eliminar el ticket: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar el ticket. Inténtalo de nuevo.');
+            }
         }
     </script>
 </body>

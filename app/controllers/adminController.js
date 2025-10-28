@@ -270,33 +270,73 @@ class AdminController {
     }
   }
 
-  // Listar participantes con filtros y paginación
+  // Listar participantes agrupados por cédula con filtros y paginación
   async listParticipants(req, res) {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = 50;
       const offset = (page - 1) * limit;
 
-      // Construir filtros
-      const where = {};
-      if (req.query.province) where.province = req.query.province;
-      if (req.query.validated !== undefined) where.ticket_validated = req.query.validated === 'true';
-      if (req.query.search) {
-        where[require('sequelize').Op.or] = [
-          { name: { [require('sequelize').Op.iLike]: `%${req.query.search}%` } },
-          { last_name: { [require('sequelize').Op.iLike]: `%${req.query.search}%` } },
-          { cedula: { [require('sequelize').Op.iLike]: `%${req.query.search}%` } },
-          { phone: { [require('sequelize').Op.iLike]: `%${req.query.search}%` } },
-          { ticket_number: { [require('sequelize').Op.iLike]: `%${req.query.search}%` } }
-        ];
+      // Construir filtros para la consulta agrupada
+      let whereClause = '';
+      const replacements = {};
+
+      if (req.query.province) {
+        whereClause += ' AND p.province = :province';
+        replacements.province = req.query.province;
       }
 
-      // Obtener participantes
-      const { count, rows: participants } = await Participant.findAndCountAll({
-        where,
-        order: [['created_at', 'DESC']],
-        limit,
-        offset
+      if (req.query.validated !== undefined) {
+        whereClause += ' AND p.ticket_validated = :validated';
+        replacements.validated = req.query.validated === 'true';
+      }
+
+      if (req.query.search) {
+        whereClause += ` AND (
+          p.name ILIKE :search OR
+          p.last_name ILIKE :search OR
+          p.cedula ILIKE :search OR
+          p.phone ILIKE :search OR
+          p.ticket_number ILIKE :search
+        )`;
+        replacements.search = `%${req.query.search}%`;
+      }
+
+      // Consulta SQL para agrupar participantes por cédula
+      const query = `
+        SELECT
+          p.cedula,
+          p.name,
+          p.last_name,
+          p.phone,
+          p.province,
+          COUNT(*) as ticket_count,
+          STRING_AGG(p.ticket_number::text, ', ' ORDER BY p.created_at) as ticket_numbers,
+          STRING_AGG(p.created_at::text, ', ' ORDER BY p.created_at) as registration_dates,
+          STRING_AGG(p.ticket_image_url, ', ' ORDER BY p.created_at) as ticket_images,
+          STRING_AGG(p.id::text, ', ' ORDER BY p.created_at) as participant_ids,
+          MIN(p.created_at) as first_registration,
+          MAX(p.created_at) as last_registration
+        FROM participants p
+        WHERE 1=1 ${whereClause}
+        GROUP BY p.cedula, p.name, p.last_name, p.phone, p.province
+        ORDER BY MAX(p.created_at) DESC
+        LIMIT :limit OFFSET :offset
+      `;
+
+      const countQuery = `
+        SELECT COUNT(DISTINCT cedula) as total
+        FROM participants p
+        WHERE 1=1 ${whereClause}
+      `;
+
+      // Ejecutar consultas
+      const [participantsResult] = await require('../config/database').sequelize.query(query, {
+        replacements: { ...replacements, limit, offset }
+      });
+
+      const [countResult] = await require('../config/database').sequelize.query(countQuery, {
+        replacements
       });
 
       // Obtener lista de provincias para filtro
@@ -305,13 +345,29 @@ class AdminController {
         raw: true
       });
 
+      // Transformar resultados para la vista
+      const participants = participantsResult.map(p => ({
+        cedula: p.cedula,
+        name: p.name,
+        last_name: p.last_name,
+        phone: p.phone,
+        province: p.province,
+        ticket_count: parseInt(p.ticket_count),
+        ticket_numbers: p.ticket_numbers,
+        registration_dates: p.registration_dates,
+        ticket_images: p.ticket_images,
+        participant_ids: p.participant_ids,
+        first_registration: p.first_registration,
+        last_registration: p.last_registration
+      }));
+
       res.render('admin/participants', {
         title: 'Gestión de Participantes',
         participants,
         provinces: provinces.map(p => p.province),
         currentPage: page,
-        totalPages: Math.ceil(count / limit),
-        totalCount: count,
+        totalPages: Math.ceil(countResult[0].total / limit),
+        totalCount: countResult[0].total,
         filters: req.query
       });
 
@@ -367,36 +423,76 @@ class AdminController {
     }
   }
 
-  // Ver detalle de participante
+  // Ver detalle de participante (todos los tickets de una cédula)
   async showParticipant(req, res) {
     try {
       const { id } = req.params;
       console.log(`🔍 Buscando participante con ID: ${id}`);
 
-      const participant = await Participant.findByPk(id);
+      // Si el ID contiene coma, es una lista de IDs (múltiples tickets)
+      if (id.includes(',')) {
+        const participantIds = id.split(',').map(id => parseInt(id.trim()));
+        console.log(`📋 Mostrando múltiples tickets - IDs: ${participantIds.join(', ')}`);
 
-      if (!participant) {
-        console.log(`❌ Participante con ID ${id} no encontrado`);
-        return res.render('admin/participants', {
-          title: 'Participante no encontrado',
-          error: 'Participante no encontrado',
-          participants: [],
-          provinces: [],
-          currentPage: 1,
-          totalPages: 1,
-          totalCount: 0,
-          filters: {}
+        // Obtener todos los tickets de esta cédula
+        const participants = await Participant.findAll({
+          where: { id: participantIds },
+          order: [['created_at', 'ASC']]
+        });
+
+        if (!participants || participants.length === 0) {
+          console.log(`❌ No se encontraron tickets para IDs: ${participantIds.join(', ')}`);
+          return res.render('admin/participants', {
+            title: 'Participante no encontrado',
+            error: 'Participante no encontrado',
+            participants: [],
+            provinces: [],
+            currentPage: 1,
+            totalPages: 1,
+            totalCount: 0,
+            filters: {}
+          });
+        }
+
+        // Usar el primer participante para información básica
+        const mainParticipant = participants[0];
+
+        console.log(`✅ Encontrados ${participants.length} tickets para: ${mainParticipant.name} ${mainParticipant.last_name}`);
+
+        res.render('admin/participant-detail', {
+          title: `Detalle - ${mainParticipant.name} ${mainParticipant.last_name}`,
+          participant: mainParticipant,
+          allTickets: participants, // Todos los tickets de esta persona
+          adminUsername: req.session.adminUsername
+        });
+      } else {
+        // Vista individual (por compatibilidad)
+        const participant = await Participant.findByPk(parseInt(id));
+
+        if (!participant) {
+          console.log(`❌ Participante con ID ${id} no encontrado`);
+          return res.render('admin/participants', {
+            title: 'Participante no encontrado',
+            error: 'Participante no encontrado',
+            participants: [],
+            provinces: [],
+            currentPage: 1,
+            totalPages: 1,
+            totalCount: 0,
+            filters: {}
+          });
+        }
+
+        console.log(`✅ Participante encontrado: ${participant.name} ${participant.last_name}`);
+        console.log(`📸 URL de imagen: ${participant.ticket_image_url}`);
+
+        res.render('admin/participant-detail', {
+          title: `Detalle - ${participant.name} ${participant.last_name}`,
+          participant,
+          allTickets: [participant], // Solo este ticket
+          adminUsername: req.session.adminUsername
         });
       }
-
-      console.log(`✅ Participante encontrado: ${participant.name} ${participant.last_name}`);
-      console.log(`📸 URL de imagen: ${participant.ticket_image_url}`);
-
-      res.render('admin/participant-detail', {
-        title: `Detalle - ${participant.name} ${participant.last_name}`,
-        participant,
-        adminUsername: req.session.adminUsername
-      });
 
     } catch (error) {
       console.error('❌ Error obteniendo participante:', error);
@@ -410,6 +506,52 @@ class AdminController {
         totalPages: 1,
         totalCount: 0,
         filters: {}
+      });
+    }
+  }
+}
+
+  // Eliminar un ticket específico (no todo el usuario)
+  async deleteTicket(req, res) {
+    try {
+      const { id } = req.params;
+      console.log(`🗑️ Eliminando ticket con ID: ${id}`);
+
+      const participant = await Participant.findByPk(id);
+
+      if (!participant) {
+        console.log(`❌ Ticket con ID ${id} no encontrado`);
+        return res.status(404).json({
+          success: false,
+          message: 'Ticket no encontrado'
+        });
+      }
+
+      // Guardar información para logging
+      const ticketInfo = {
+        cedula: participant.cedula,
+        name: participant.name,
+        lastName: participant.last_name,
+        ticketNumber: participant.ticket_number
+      };
+
+      // Eliminar el ticket
+      await participant.destroy();
+
+      console.log(`✅ Ticket eliminado: ${ticketInfo.ticketNumber} - ${ticketInfo.name} ${ticketInfo.lastName} (${ticketInfo.cedula})`);
+
+      res.json({
+        success: true,
+        message: `Ticket ${ticketInfo.ticketNumber} eliminado exitosamente`,
+        deletedTicket: ticketInfo
+      });
+
+    } catch (error) {
+      console.error('❌ Error eliminando ticket:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({
+        success: false,
+        message: 'Error eliminando ticket'
       });
     }
   }

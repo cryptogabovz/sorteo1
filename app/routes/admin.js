@@ -23,6 +23,9 @@ router.get('/participants', authMiddleware, adminController.listParticipants);
 // Detalle de participante
 router.get('/participants/:id', authMiddleware, adminController.showParticipant);
 
+// Eliminar ticket específico
+router.delete('/participants/:id', authMiddleware, adminController.deleteTicket);
+
 // API: Obtener métricas (para dashboard AJAX)
 router.get('/api/metrics', authMiddleware, adminController.getMetrics);
 

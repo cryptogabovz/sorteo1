@@ -29,11 +29,26 @@ router.post('/api/upload-ticket',
 
 // Página de registro (después de validación exitosa)
 router.get('/registro', (req, res) => {
-  // Verificar que haya resultado de validación
-  if (!req.session.validationResult || !req.session.validationResult.valid) {
-    return res.redirect('/participar');
+  // Verificar que haya resultado de validación válido
+  if (!req.session.validationResult ||
+      !req.session.validationResult.valid ||
+      !req.session.validationResult.correlationId) {
+    console.log('❌ Acceso denegado a /registro - No hay validación previa');
+    return res.redirect('/participar?error=validation_required');
   }
 
+  // Verificar que la validación no haya expirado (opcional)
+  const validationTime = req.session.validationResult.timestamp || 0;
+  const now = Date.now();
+  const maxAge = 30 * 60 * 1000; // 30 minutos
+
+  if (now - validationTime > maxAge) {
+    console.log('❌ Validación expirada, redirigiendo a subir ticket');
+    delete req.session.validationResult;
+    return res.redirect('/participar?error=validation_expired');
+  }
+
+  console.log('✅ Acceso permitido a /registro - Validación previa confirmada');
   res.render('public/register', {
     title: 'Registro de Participante',
     validationResult: req.session.validationResult
