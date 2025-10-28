@@ -129,7 +129,7 @@
                         </h5>
                     </div>
                     <div class="card-body text-center">
-                        <% if (participant.ticket_image_url) { %>
+                        <% if (participant.ticket_image_url && participant.ticket_image_url.startsWith('/uploads/')) { %>
                             <div class="ticket-image-container">
                                 <img src="<%= participant.ticket_image_url %>"
                                      alt="Ticket de <%= participant.name %> <%= participant.last_name %>"
@@ -141,11 +141,17 @@
                                 <button class="btn btn-outline-primary btn-sm" onclick="openImageModal('<%= participant.ticket_image_url %>')">
                                     <i class="fas fa-expand me-1"></i>Ver en tamaño completo
                                 </button>
+                                <a href="<%= participant.ticket_image_url %>"
+                                   target="_blank"
+                                   class="btn btn-outline-secondary btn-sm ms-2">
+                                    <i class="fas fa-external-link-alt me-1"></i>Abrir en nueva pestaña
+                                </a>
                             </div>
                         <% } else { %>
                             <div class="text-center py-5">
                                 <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
                                 <p class="text-muted mt-2">No hay imagen disponible</p>
+                                <small class="text-muted">La imagen del ticket no fue guardada correctamente</small>
                             </div>
                         <% } %>
                     </div>
@@ -161,7 +167,7 @@
                             <a href="/admin/participants" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Volver a Participantes
                             </a>
-                            <% if (participant.ticket_image_url) { %>
+                            <% if (participant.ticket_image_url && participant.ticket_image_url.startsWith('/uploads/')) { %>
                                 <a href="<%= participant.ticket_image_url %>"
                                    target="_blank"
                                    class="btn btn-outline-primary">

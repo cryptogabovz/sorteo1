@@ -89,7 +89,7 @@ class ParticipantController {
         phone: phone.trim(),
         province: province.trim(),
         ticket_validated: true,
-        ticket_image_url: validationResult.ticketImageUrl
+        ticket_image_url: validationResult.ticketImageUrl || null
       });
 
       // Limpiar sesión

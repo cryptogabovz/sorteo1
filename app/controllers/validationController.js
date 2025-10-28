@@ -300,7 +300,7 @@ class ValidationController {
           valid: true,
           reason: ticketValidation.reason || 'Ticket válido',
           confidence: ticketValidation.confidence || 0,
-          ticketImageUrl: `/uploads/${ticketValidation.image_filename}`,
+          ticketImageUrl: ticketValidation.image_filename ? `/uploads/${ticketValidation.image_filename}` : null,
           tempFile: ticketValidation.image_filename
         };
 
