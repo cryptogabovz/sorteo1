@@ -233,15 +233,22 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('uploadContainer').style.display = 'none';
         document.getElementById('processingScreen').style.display = 'block';
 
-        // Mostrar la imagen subida en el escáner
+        // Mostrar la imagen subida en el escáner INMEDIATAMENTE (desde el navegador)
         const scannedImage = document.getElementById('scannedImage');
         if (selectedFile && scannedImage) {
+            console.log('Mostrando imagen inmediatamente desde navegador...');
             const reader = new FileReader();
             reader.onload = function(e) {
                 scannedImage.src = e.target.result;
                 scannedImage.style.display = 'block';
+                console.log('Imagen mostrada exitosamente en escáner');
+            };
+            reader.onerror = function(error) {
+                console.error('Error cargando imagen:', error);
             };
             reader.readAsDataURL(selectedFile);
+        } else {
+            console.error('No hay archivo seleccionado o elemento de imagen no encontrado');
         }
 
         // Iniciar Lottie animation (si existe)

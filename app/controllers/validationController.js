@@ -298,6 +298,8 @@ class ValidationController {
         response.confidence = ticketValidation.confidence;
         response.nextStep = 'register';
 
+        console.log('💾 Guardando validationResult en sesión para registro...');
+
         // Guardar resultado en sesión para el registro
         req.session.validationResult = {
           correlationId,
@@ -305,8 +307,14 @@ class ValidationController {
           reason: ticketValidation.reason || 'Ticket válido',
           confidence: ticketValidation.confidence || 0,
           ticketImageUrl: ticketValidation.image_filename ? `/uploads/${ticketValidation.image_filename}` : null,
-          tempFile: ticketValidation.image_filename
+          tempFile: ticketValidation.image_filename,
+          timestamp: Date.now() // Timestamp para expiración
         };
+
+        console.log('Sesión después de guardar validationResult:', {
+          validationResult: req.session.validationResult,
+          sessionID: req.sessionID
+        });
 
       } else if (ticketValidation.status === 'rejected') {
         response.valid = false;
