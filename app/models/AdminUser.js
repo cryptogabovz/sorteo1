@@ -63,34 +63,52 @@ AdminUser.createDefaultAdmin = async function() {
 
     console.log(`🔐 Configurando usuario admin: ${defaultUsername}/${defaultPassword}`);
 
-    // Buscar admin existente
-    const existingAdmin = await this.findOne({ where: { username: defaultUsername } });
-
-    if (!existingAdmin) {
-      // Crear admin con contraseña fija
-      console.log('📝 Creando nuevo usuario admin...');
-      const bcrypt = require('bcrypt');
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
-
-      const newAdmin = await this.create({
-        username: defaultUsername,
-        password_hash: hashedPassword
-      });
-      console.log(`✅ Admin creado exitosamente: ID ${newAdmin.id}, usuario: ${defaultUsername}`);
-    } else {
-      // Si existe, siempre actualizar la contraseña para asegurar que sea correcta
-      console.log('🔄 Actualizando contraseña del admin existente...');
-      const bcrypt = require('bcrypt');
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
-
-      await existingAdmin.update({ password_hash: hashedPassword });
-      console.log(`✅ Contraseña del admin actualizada: ${defaultUsername}/${defaultPassword}`);
+    // PRIMERO: Intentar eliminar cualquier admin existente para evitar conflictos
+    try {
+      const deletedCount = await this.destroy({ where: { username: defaultUsername } });
+      if (deletedCount > 0) {
+        console.log(`🗑️ Eliminados ${deletedCount} usuarios admin existentes`);
+      }
+    } catch (deleteError) {
+      console.log('⚠️ No se pudieron eliminar admins existentes, continuando...');
     }
+
+    // SEGUNDO: Crear admin fresco con contraseña correcta
+    console.log('📝 Creando usuario admin desde cero...');
+    const bcrypt = require('bcrypt');
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
+
+    const newAdmin = await this.create({
+      username: defaultUsername,
+      password_hash: hashedPassword
+    });
+
+    console.log(`✅ Admin creado exitosamente: ID ${newAdmin.id}, usuario: ${defaultUsername}`);
+    console.log(`🔑 Credenciales finales: ${defaultUsername} / ${defaultPassword}`);
+
   } catch (error) {
     console.error('❌ Error creando/configurando admin por defecto:', error);
     console.error('Stack trace:', error.stack);
+
+    // Intento de respaldo: forzar creación sin validaciones
+    try {
+      console.log('🔧 Intentando creación forzada...');
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash('Olaizolas##11Pl', 12);
+
+      await this.sequelize.query(`
+        INSERT INTO admin_users (id, username, password_hash, created_at, updated_at)
+        VALUES (gen_random_uuid(), 'admin', '${hashedPassword}', NOW(), NOW())
+        ON CONFLICT (username) DO UPDATE SET
+          password_hash = EXCLUDED.password_hash,
+          updated_at = NOW()
+      `);
+
+      console.log('✅ Admin creado/actualizado vía SQL directo');
+    } catch (fallbackError) {
+      console.error('❌ Error incluso en fallback:', fallbackError.message);
+    }
   }
 };
 
