@@ -527,6 +527,50 @@ class AdminController {
     }
   }
 
+  // Mostrar página de configuración
+  async showConfiguracion(req, res) {
+    try {
+      console.log('⚙️ Acceso a página de configuración');
+
+      // Información del webhook de respuesta (donde n8n debe enviar la respuesta)
+      const config = require('../config/env');
+      const webhookInfo = {
+        responseUrl: `${req.protocol}://${req.get('host')}/api/webhook/validation-response`,
+        n8nWebhookUrl: config.n8nWebhookUrl,
+        user: config.n8nWebhookUser,
+        examplePayload: {
+          image: "base64_encoded_image_data",
+          filename: "ticket_image.jpg",
+          mimetype: "image/jpeg",
+          timestamp: "2025-10-27T21:05:54.347Z",
+          source: "sorteo-web-upload"
+        },
+        exampleResponse: {
+          valid: true,
+          reason: "Ticket válido - formato correcto",
+          confidence: 0.95
+        }
+      };
+
+      res.render('admin/configuracion', {
+        title: 'Configuración del Sistema',
+        adminUsername: req.session.adminUsername,
+        webhookInfo
+      });
+
+    } catch (error) {
+      console.error('❌ Error cargando configuración:', error);
+      console.error('Stack trace:', error.stack);
+
+      res.render('admin/configuracion', {
+        title: 'Configuración del Sistema',
+        adminUsername: req.session.adminUsername || 'Admin',
+        webhookInfo: null,
+        error: 'Error cargando configuración del sistema'
+      });
+    }
+  }
+
   // Eliminar un ticket específico (no todo el usuario)
   async deleteTicket(req, res) {
     try {

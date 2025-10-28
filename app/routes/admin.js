@@ -29,4 +29,7 @@ router.delete('/participants/:id', authMiddleware, adminController.deleteTicket)
 // API: Obtener métricas (para dashboard AJAX)
 router.get('/api/metrics', authMiddleware, adminController.getMetrics);
 
+// Página de configuración
+router.get('/configuracion', authMiddleware, adminController.showConfiguracion);
+
 module.exports = router;
