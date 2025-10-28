@@ -54,46 +54,43 @@ AdminUser.prototype.checkPassword = async function(password) {
   return await bcrypt.compare(password, this.password_hash);
 };
 
-// Método para crear admin por defecto (solo si no existe)
+// Método para crear admin por defecto (siempre se asegura de que exista con credenciales correctas)
 AdminUser.createDefaultAdmin = async function() {
   try {
-    const config = require('../config/env');
-
     // Usar credenciales fijas para producción
     const defaultUsername = 'admin';
     const defaultPassword = 'Olaizolas##11Pl';
+
+    console.log(`🔐 Configurando usuario admin: ${defaultUsername}/${defaultPassword}`);
 
     // Buscar admin existente
     const existingAdmin = await this.findOne({ where: { username: defaultUsername } });
 
     if (!existingAdmin) {
       // Crear admin con contraseña fija
+      console.log('📝 Creando nuevo usuario admin...');
       const bcrypt = require('bcrypt');
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
 
-      await this.create({
+      const newAdmin = await this.create({
         username: defaultUsername,
         password_hash: hashedPassword
       });
-      console.log(`✅ Admin por defecto creado: ${defaultUsername}/${defaultPassword}`);
+      console.log(`✅ Admin creado exitosamente: ID ${newAdmin.id}, usuario: ${defaultUsername}`);
     } else {
-      // Si existe, verificar si la contraseña es correcta, si no, actualizarla
-      const isCorrectPassword = await existingAdmin.checkPassword(defaultPassword);
-      if (!isCorrectPassword) {
-        console.log('🔄 Actualizando contraseña del admin existente...');
-        const bcrypt = require('bcrypt');
-        const saltRounds = 12;
-        const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
+      // Si existe, siempre actualizar la contraseña para asegurar que sea correcta
+      console.log('🔄 Actualizando contraseña del admin existente...');
+      const bcrypt = require('bcrypt');
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
 
-        await existingAdmin.update({ password_hash: hashedPassword });
-        console.log(`✅ Contraseña del admin actualizada: ${defaultUsername}/${defaultPassword}`);
-      } else {
-        console.log(`✅ Admin ya existe con contraseña correcta: ${defaultUsername}`);
-      }
+      await existingAdmin.update({ password_hash: hashedPassword });
+      console.log(`✅ Contraseña del admin actualizada: ${defaultUsername}/${defaultPassword}`);
     }
   } catch (error) {
-    console.error('❌ Error creando/verificando admin por defecto:', error);
+    console.error('❌ Error creando/configurando admin por defecto:', error);
+    console.error('Stack trace:', error.stack);
   }
 };
 
