@@ -188,26 +188,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             window.location.href = '/registro';
                         }, 1500);
                     } else if (result.status === 'rejected') {
-                        // Validación rechazada
+                        // Validación rechazada - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
-                        hideProcessingScreen();
-                        showMessage(`Ticket rechazado: ${result.reason}`, 'danger');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Validar Ticket';
+                        showProcessingError(result.reason || 'Ticket no válido');
                     } else if (result.status === 'expired') {
-                        // Validación expirada
+                        // Validación expirada - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
-                        hideProcessingScreen();
-                        showMessage('La validación ha expirado. Intente nuevamente.', 'warning');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Validar Ticket';
+                        showProcessingError('La validación ha expirado. Intente nuevamente.');
                     } else if (pollCount >= maxPolls) {
-                        // Timeout
+                        // Timeout - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
-                        hideProcessingScreen();
-                        showMessage('Tiempo de espera agotado. Intente nuevamente.', 'warning');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Validar Ticket';
+                        showProcessingError('Tiempo de espera agotado. Intente nuevamente.');
                     }
                     // Si aún está pendiente, continuar polling
                 } else {
@@ -229,7 +220,50 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideProcessingScreen() {
         document.getElementById('uploadForm').style.display = 'block';
         document.getElementById('processingScreen').style.display = 'none';
+        // Ocultar también el error si estaba visible
+        document.getElementById('processingError').style.display = 'none';
     }
+
+    function showProcessingError(reason) {
+        // Ocultar spinner y progreso
+        document.querySelector('.processing-animation').style.display = 'none';
+        document.querySelector('.progress').style.display = 'none';
+
+        // Cambiar título y mensaje
+        document.getElementById('processingTitle').textContent = 'Validación Completada';
+        document.getElementById('processingMessage').textContent = 'Hemos revisado tu ticket y encontramos un problema.';
+
+        // Mostrar error
+        document.getElementById('errorReason').textContent = reason;
+        document.getElementById('processingError').style.display = 'block';
+    }
+
+    function resetUpload() {
+        // Limpiar archivo seleccionado
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+
+        // Resetear pantalla de procesamiento
+        document.querySelector('.processing-animation').style.display = 'block';
+        document.querySelector('.progress').style.display = 'block';
+        document.getElementById('processingTitle').textContent = 'Procesando tu imagen...';
+        document.getElementById('processingMessage').textContent = 'Estamos validando tu ticket automáticamente. Esto puede tomar unos segundos.';
+        document.getElementById('processingError').style.display = 'none';
+
+        // Ocultar pantalla de procesamiento y mostrar formulario
+        hideProcessingScreen();
+
+        // Resetear botón
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Validar Ticket';
+
+        // Limpiar mensajes
+        showMessage('', '');
+    }
+
+    // Hacer resetUpload disponible globalmente
+    window.resetUpload = resetUpload;
 
     function showMessage(message, type) {
         const messageDiv = document.getElementById('message');
