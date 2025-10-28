@@ -371,25 +371,45 @@ class AdminController {
   async showParticipant(req, res) {
     try {
       const { id } = req.params;
+      console.log(`🔍 Buscando participante con ID: ${id}`);
+
       const participant = await Participant.findByPk(id);
 
       if (!participant) {
+        console.log(`❌ Participante con ID ${id} no encontrado`);
         return res.render('admin/participants', {
           title: 'Participante no encontrado',
-          error: 'Participante no encontrado'
+          error: 'Participante no encontrado',
+          participants: [],
+          provinces: [],
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: 0,
+          filters: {}
         });
       }
 
+      console.log(`✅ Participante encontrado: ${participant.name} ${participant.last_name}`);
+      console.log(`📸 URL de imagen: ${participant.ticket_image_url}`);
+
       res.render('admin/participant-detail', {
         title: `Detalle - ${participant.name} ${participant.last_name}`,
-        participant
+        participant,
+        adminUsername: req.session.adminUsername
       });
 
     } catch (error) {
-      console.error('Error obteniendo participante:', error);
+      console.error('❌ Error obteniendo participante:', error);
+      console.error('Stack trace:', error.stack);
       res.render('admin/participants', {
         title: 'Error',
-        error: 'Error obteniendo participante'
+        error: 'Error obteniendo participante',
+        participants: [],
+        provinces: [],
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        filters: {}
       });
     }
   }
