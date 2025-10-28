@@ -128,58 +128,18 @@ class ValidationController {
 
       console.log(`✅ Respuesta inmediata de n8n - Correlation ID: ${correlationId}`);
 
-      // Verificar si n8n ya dio respuesta inmediata
-      const { valid, reason, confidence } = response.data;
+      // La respuesta de n8n aquí es solo de confirmación de recepción
+      // La validación real vendrá por webhook después
+      console.log(`📨 Imagen enviada a n8n - esperando respuesta asíncrona por webhook`);
 
-      if (valid !== undefined) {
-        // Respuesta inmediata - actualizar registro
-        await ticketValidation.update({
-          status: valid ? 'approved' : 'rejected',
-          validation_result: response.data,
-          reason: reason || (valid ? 'Ticket válido' : 'Ticket no válido'),
-          confidence: confidence || 0,
-          n8n_response_received: true
-        });
-
-        console.log(`🎯 Validación completada inmediatamente - Status: ${valid ? 'approved' : 'rejected'}`);
-
-        // Guardar resultado en sesión para el siguiente paso
-        req.session.validationResult = {
-          correlationId,
-          valid: valid || false,
-          reason: reason || 'Ticket no válido',
-          confidence: confidence || 0,
-          ticketImageUrl: `/uploads/${req.file.filename}`,
-          tempFile: req.file.filename
-        };
-
-        return res.json({
-          success: true,
-          valid: valid || false,
-          reason: reason || 'Ticket no válido',
-          confidence: confidence || 0,
-          nextStep: valid ? 'register' : 'retry'
-        });
-      } else {
-        // Respuesta asíncrona esperada - n8n responderá por webhook
-        console.log(`⏳ Validación asíncrona iniciada - Esperando respuesta en webhook`);
-
-        // Guardar correlationId en sesión para que el frontend pueda hacer polling
-        req.session.pendingValidation = {
-          correlationId,
-          status: 'processing',
-          message: 'Procesando imagen...',
-          timestamp: new Date().toISOString()
-        };
-
-        return res.json({
-          success: true,
-          message: 'Validación iniciada. Procesando imagen...',
-          correlationId,
-          status: 'processing',
-          nextStep: 'wait'
-        });
-      }
+      // Siempre esperamos respuesta asíncrona por webhook
+      return res.json({
+        success: true,
+        message: 'Validación iniciada. Procesando imagen...',
+        correlationId,
+        status: 'processing',
+        nextStep: 'wait'
+      });
 
     } catch (error) {
       console.error('❌ Error en upload y validación:', error);
