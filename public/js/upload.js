@@ -21,6 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 autoplay: false,
                 path: '/images/search.lottie'
             });
+
+            // Asegurar que el contenedor sea visible
+            const container = document.getElementById('lottieContainer');
+            if (container) {
+                container.style.display = 'block';
+                container.style.opacity = '1';
+            }
+        } else {
+            console.error('Lottie library not loaded');
         }
     }
 
@@ -192,6 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Iniciar Lottie animation
         if (lottieAnimation) {
             lottieAnimation.play();
+            console.log('Lottie animation started');
+        } else {
+            console.error('Lottie animation not initialized');
         }
 
         // Iniciar polling para verificar estado
