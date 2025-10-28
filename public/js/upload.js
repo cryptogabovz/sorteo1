@@ -112,7 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Mostrar loading
+        // Ocultar contenedor de subida y mostrar pantalla de procesamiento
+        document.getElementById('uploadContainer').style.display = 'none';
+        document.getElementById('processingScreen').style.display = 'block';
+
+        // Mostrar loading en el botón (aunque estará oculto)
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
 
@@ -218,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideProcessingScreen() {
-        document.getElementById('uploadForm').style.display = 'block';
+        document.getElementById('uploadContainer').style.display = 'block';
         document.getElementById('processingScreen').style.display = 'none';
         // Ocultar también el error si estaba visible
         document.getElementById('processingError').style.display = 'none';
