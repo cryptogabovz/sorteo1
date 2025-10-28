@@ -34,7 +34,6 @@ const Participant = sequelize.define('participants', {
   cedula: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true,
     validate: {
       notEmpty: true,
       len: [5, 20]
@@ -74,10 +73,6 @@ const Participant = sequelize.define('participants', {
     {
       unique: true,
       fields: ['ticket_number']
-    },
-    {
-      unique: true,
-      fields: ['cedula']
     },
     {
       fields: ['province']

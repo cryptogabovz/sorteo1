@@ -68,14 +68,9 @@ class ParticipantController {
         }
       }
 
-      // Verificar que la cédula no esté registrada
-      const existingParticipant = await Participant.findOne({ where: { cedula } });
-      if (existingParticipant) {
-        return res.status(400).json({
-          success: false,
-          message: 'Esta cédula ya está registrada'
-        });
-      }
+      // Nota: Permitir múltiples registros con la misma cédula
+      // ya que una persona puede comprar varios productos y participar múltiples veces
+      console.log(`📝 Registro con cédula ${cedula} - Permitido múltiples participaciones`);
 
       // Obtener próximo número de ticket
       const ticketNumber = await Participant.getNextTicketNumber();
