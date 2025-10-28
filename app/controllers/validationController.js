@@ -116,23 +116,26 @@ class ValidationController {
 
       console.log(`📤 Enviando imagen a n8n - Correlation ID: ${correlationId}`);
 
-      // Llamar a webhook de n8n con autenticación Basic Auth
+      // Llamar a webhook de n8n con timeout reducido (solo para envío)
       const auth = Buffer.from(`${config.n8nWebhookUser}:${config.n8nWebhookPass}`).toString('base64');
-      const response = await axios.post(config.n8nWebhookUrl, payload, {
-        timeout: 30000,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${auth}`
-        }
-      });
 
-      console.log(`✅ Respuesta inmediata de n8n - Correlation ID: ${correlationId}`);
-
-      // La respuesta de n8n aquí es solo de confirmación de recepción
-      // La validación real vendrá por webhook después
-      console.log(`📨 Imagen enviada a n8n - esperando respuesta asíncrona por webhook`);
+      try {
+        await axios.post(config.n8nWebhookUrl, payload, {
+          timeout: 5000, // Solo 5 segundos para envío, no esperamos respuesta
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${auth}`
+          }
+        });
+        console.log(`📤 Imagen enviada exitosamente a n8n - Correlation ID: ${correlationId}`);
+      } catch (n8nError) {
+        console.error(`⚠️ Error enviando a n8n, pero continuamos:`, n8nError.message);
+        // No fallamos aquí, continuamos con el flujo asíncrono
+      }
 
       // Siempre esperamos respuesta asíncrona por webhook
+      console.log(`⏳ Iniciando espera de validación asíncrona - Correlation ID: ${correlationId}`);
+
       return res.json({
         success: true,
         message: 'Validación iniciada. Procesando imagen...',
