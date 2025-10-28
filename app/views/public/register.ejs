@@ -90,6 +90,19 @@
                                     </select>
                                 </div>
 
+                                <!-- Checkbox de términos y condiciones -->
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="termsCheck" name="termsAccepted" required>
+                                        <label class="form-check-label" for="termsCheck">
+                                            Acepto los <a href="#" onclick="showTermsModal(); return false;" style="color: var(--brand-blue);">términos y condiciones</a> del sorteo *
+                                        </label>
+                                    </div>
+                                    <div class="form-text">
+                                        Es obligatorio aceptar los términos para participar en el sorteo.
+                                    </div>
+                                </div>
+
                                 <div class="d-grid">
                                     <button type="submit" id="submitBtn" class="btn btn-success btn-lg">
                                         <span class="spinner-border spinner-border-sm me-2" role="status" style="display: none;"></span>
@@ -112,7 +125,62 @@
         </main>
     </div>
 
+    <!-- Modal de términos y condiciones -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Términos y Condiciones del Sorteo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6><strong>1. Participación en el Sorteo</strong></h6>
+                    <p>Al participar en este sorteo, aceptas cumplir con todas las reglas y condiciones establecidas por la organización.</p>
+
+                    <h6><strong>2. Elegibilidad</strong></h6>
+                    <p>Para participar, debes tener al menos 18 años de edad y residir en Venezuela. Solo se permite una participación por persona, identificada por número de cédula.</p>
+
+                    <h6><strong>3. Validación de Tickets</strong></h6>
+                    <p>Los tickets deben ser válidos y legibles. La organización se reserva el derecho de rechazar tickets que no cumplan con los criterios de validación.</p>
+
+                    <h6><strong>4. Selección del Ganador</strong></h6>
+                    <p>El ganador será seleccionado de manera aleatoria entre todos los participantes válidos. El sorteo se realizará en fecha y hora determinada por la organización.</p>
+
+                    <h6><strong>5. Reclamación del Premio</strong></h6>
+                    <p>El ganador tendrá un plazo determinado para reclamar el premio. De no hacerlo, se seleccionará un nuevo ganador.</p>
+
+                    <h6><strong>6. Privacidad de Datos</strong></h6>
+                    <p>Los datos personales proporcionados serán utilizados únicamente para fines del sorteo y serán tratados conforme a la legislación de protección de datos.</p>
+
+                    <h6><strong>7. Modificaciones</strong></h6>
+                    <p>La organización se reserva el derecho de modificar estos términos y condiciones en cualquier momento.</p>
+
+                    <h6><strong>8. Aceptación</strong></h6>
+                    <p>Al marcar la casilla de aceptación, confirmas que has leído, entendido y aceptado todos los términos y condiciones del sorteo.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="acceptTerms()">
+                        <i class="fas fa-check me-2"></i>Aceptar Términos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/register.js"></script>
+    <script>
+        function showTermsModal() {
+            const modal = new bootstrap.Modal(document.getElementById('termsModal'));
+            modal.show();
+        }
+
+        function acceptTerms() {
+            document.getElementById('termsCheck').checked = true;
+            // Trigger validation
+            document.getElementById('termsCheck').dispatchEvent(new Event('change'));
+        }
+    </script>
 </body>
 </html>

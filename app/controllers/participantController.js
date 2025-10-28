@@ -4,7 +4,15 @@ class ParticipantController {
   // Registrar nuevo participante
   async register(req, res) {
     try {
-      const { name, lastName, cedula, phone, province } = req.body;
+      const { name, lastName, cedula, phone, province, termsAccepted } = req.body;
+
+      // Validar aceptación de términos y condiciones
+      if (!termsAccepted || termsAccepted !== 'on') {
+        return res.status(400).json({
+          success: false,
+          message: 'Debe aceptar los términos y condiciones para participar'
+        });
+      }
 
       // Sanitización y validación de inputs
       const sanitizedData = {
@@ -46,7 +54,7 @@ class ParticipantController {
         });
       }
 
-      // Validar datos requeridos
+      // Validar datos requeridos (todos obligatorios)
       if (!name || !lastName || !cedula || !phone || !province) {
         return res.status(400).json({
           success: false,
