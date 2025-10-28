@@ -509,7 +509,6 @@ class AdminController {
       });
     }
   }
-}
 
   // Eliminar un ticket específico (no todo el usuario)
   async deleteTicket(req, res) {
