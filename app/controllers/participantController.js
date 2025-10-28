@@ -1,4 +1,4 @@
-const { Participant } = require('../models');
+const { Participant, TicketValidation } = require('../models');
 
 class ParticipantController {
   // Registrar nuevo participante
@@ -15,7 +15,7 @@ class ParticipantController {
       }
 
       // Verificar que haya resultado de validación en sesión
-      if (!req.session.validationResult || !req.session.validationResult.valid) {
+      if (!req.session.validationResult) {
         return res.status(400).json({
           success: false,
           message: 'Debe validar el ticket primero'
@@ -23,6 +23,50 @@ class ParticipantController {
       }
 
       const validationResult = req.session.validationResult;
+
+      // Si hay correlationId, verificar estado en BD
+      if (validationResult.correlationId) {
+        const ticketValidation = await TicketValidation.findByCorrelationId(validationResult.correlationId);
+
+        if (!ticketValidation) {
+          return res.status(400).json({
+            success: false,
+            message: 'Validación no encontrada. Intente subir el ticket nuevamente.'
+          });
+        }
+
+        if (ticketValidation.status === 'pending') {
+          return res.status(400).json({
+            success: false,
+            message: 'La validación aún está en proceso. Espere unos momentos e intente nuevamente.'
+          });
+        }
+
+        if (ticketValidation.status === 'rejected') {
+          return res.status(400).json({
+            success: false,
+            message: `Ticket rechazado: ${ticketValidation.reason || 'No cumple con los requisitos'}`
+          });
+        }
+
+        if (ticketValidation.status !== 'approved') {
+          return res.status(400).json({
+            success: false,
+            message: 'Estado de validación desconocido. Contacte al administrador.'
+          });
+        }
+
+        // Validación aprobada - continuar con el registro
+        console.log(`✅ Validación aprobada para registro - Correlation ID: ${validationResult.correlationId}`);
+      } else {
+        // Validación síncrona (legacy) - verificar valid flag
+        if (!validationResult.valid) {
+          return res.status(400).json({
+            success: false,
+            message: 'El ticket no es válido'
+          });
+        }
+      }
 
       // Verificar que la cédula no esté registrada
       const existingParticipant = await Participant.findOne({ where: { cedula } });

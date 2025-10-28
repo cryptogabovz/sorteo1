@@ -1,6 +1,7 @@
 const { sequelize } = require('../config/database');
 const Participant = require('./Participant');
 const AdminUser = require('./AdminUser');
+const TicketValidation = require('./TicketValidation');
 
 // Sincronizar modelos con la base de datos
 const syncDatabase = async () => {
@@ -135,7 +136,80 @@ const syncDatabase = async () => {
         console.log('ℹ️ Índice username ya existe');
       }
 
+      try {
+        // Verificar tabla ticket_validations
+        await queryInterface.describeTable('ticket_validations');
+        console.log('✅ Tabla ticket_validations ya existe');
+      } catch (error) {
+        console.log('ℹ️ Creando tabla ticket_validations...');
+        await queryInterface.createTable('ticket_validations', {
+          id: {
+            type: sequelize.Sequelize.UUID,
+            defaultValue: sequelize.Sequelize.UUIDV4,
+            primaryKey: true
+          },
+          correlation_id: {
+            type: sequelize.Sequelize.UUID,
+            allowNull: false,
+            unique: true
+          },
+          image_path: {
+            type: sequelize.Sequelize.STRING(255),
+            allowNull: false
+          },
+          image_filename: {
+            type: sequelize.Sequelize.STRING(255),
+            allowNull: false
+          },
+          status: {
+            type: sequelize.Sequelize.ENUM('pending', 'approved', 'rejected'),
+            defaultValue: 'pending',
+            allowNull: false
+          },
+          validation_result: {
+            type: sequelize.Sequelize.JSON,
+            allowNull: true
+          },
+          reason: {
+            type: sequelize.Sequelize.TEXT,
+            allowNull: true
+          },
+          confidence: {
+            type: sequelize.Sequelize.DECIMAL(3, 2),
+            allowNull: true
+          },
+          n8n_response_received: {
+            type: sequelize.Sequelize.BOOLEAN,
+            defaultValue: false,
+            allowNull: false
+          },
+          expires_at: {
+            type: sequelize.Sequelize.DATE,
+            allowNull: false
+          },
+          created_at: {
+            type: sequelize.Sequelize.DATE,
+            allowNull: false
+          },
+          updated_at: {
+            type: sequelize.Sequelize.DATE,
+            allowNull: false
+          }
+        });
+        console.log('✅ Tabla ticket_validations creada');
+      }
+
       console.log('✅ Base de datos inicializada correctamente en producción');
+
+      // Limpiar validaciones expiradas
+      try {
+        const cleaned = await TicketValidation.cleanupExpired();
+        if (cleaned > 0) {
+          console.log(`🧹 Limpiadas ${cleaned} validaciones expiradas al inicio`);
+        }
+      } catch (cleanupError) {
+        console.error('❌ Error limpiando validaciones expiradas:', cleanupError.message);
+      }
 
       // Crear/verificar usuario admin
       const config = require('../config/env');
@@ -161,5 +235,6 @@ module.exports = {
   sequelize,
   Participant,
   AdminUser,
+  TicketValidation,
   syncDatabase
 };

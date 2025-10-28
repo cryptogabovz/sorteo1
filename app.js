@@ -56,6 +56,19 @@ const startServer = async () => {
     // Sincronizar base de datos
     await syncDatabase();
 
+    // Limpiar validaciones expiradas periódicamente (cada 5 minutos)
+    setInterval(async () => {
+      try {
+        const { TicketValidation } = require('./app/models');
+        const cleaned = await TicketValidation.cleanupExpired();
+        if (cleaned > 0) {
+          console.log(`🧹 Limpiadas ${cleaned} validaciones expiradas (tarea programada)`);
+        }
+      } catch (error) {
+        console.error('❌ Error en limpieza programada:', error.message);
+      }
+    }, 5 * 60 * 1000); // 5 minutos
+
     // Iniciar servidor
     const PORT = config.port;
     app.listen(PORT, () => {
