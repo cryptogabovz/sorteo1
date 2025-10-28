@@ -115,6 +115,7 @@ class AdminController {
       // Verificar contraseña
       console.log('🔐 Verificando contraseña...');
       console.log(`✅ Usuario encontrado: ${admin.username}, ID: ${admin.id}`);
+      console.log(`🔍 Verificando contraseña para usuario: ${admin.username}`);
       const isValidPassword = await admin.checkPassword(password);
       if (!isValidPassword) {
         console.log(`❌ Login fallido: contraseña incorrecta para usuario '${username}'`);
