@@ -49,12 +49,13 @@ class AdminController {
       // Verificar si las credenciales coinciden con las variables de entorno
       console.log('🔍 Verificando credenciales contra variables de entorno...');
 
+      let admin;
+
       if (config.adminUsername && config.adminPassword && username === config.adminUsername) {
         console.log('✅ Credenciales válidas contra variables de entorno');
 
         // Buscar usuario admin en BD
         console.log('🔍 Buscando usuario en BD...');
-        let admin;
 
         try {
           admin = await AdminUser.findOne({ where: { username } });
