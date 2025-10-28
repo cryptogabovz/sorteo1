@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Iniciar polling para verificar estado
         let pollCount = 0;
-        const maxPolls = 60; // Máximo 60 segundos (1 poll por segundo)
+        const maxPolls = 120; // Máximo 120 segundos (2 minutos) para dar tiempo a n8n
 
         const pollInterval = setInterval(async () => {
             try {

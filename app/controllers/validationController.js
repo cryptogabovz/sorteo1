@@ -91,7 +91,7 @@ class ValidationController {
 
       // Crear registro de validación pendiente
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 30); // Expira en 30 minutos
+      expiresAt.setMinutes(expiresAt.getMinutes() + 60); // Expira en 60 minutos para dar tiempo a n8n
 
       const ticketValidation = await TicketValidation.create({
         correlation_id: correlationId,
@@ -195,7 +195,8 @@ class ValidationController {
       console.log(`🔔 Respuesta de validación recibida - Correlation ID: ${correlation_id}`, {
         valid,
         reason,
-        confidence
+        confidence,
+        timestamp: new Date().toISOString()
       });
 
       // Buscar la validación pendiente
@@ -227,6 +228,8 @@ class ValidationController {
       });
 
       console.log(`✅ Validación actualizada - Status: ${valid ? 'approved' : 'rejected'}, Correlation ID: ${correlation_id}`);
+      console.log(`📅 Tiempo de expiración: ${ticketValidation.expires_at}`);
+      console.log(`⏱️ Tiempo restante: ${Math.round((ticketValidation.expires_at - new Date()) / 1000)} segundos`);
 
       res.json({
         success: true,
@@ -273,6 +276,7 @@ class ValidationController {
 
       // Verificar si expiró
       if (new Date() > ticketValidation.expires_at) {
+        console.log(`⏰ Validación expirada - Correlation ID: ${correlationId}, Expiró: ${ticketValidation.expires_at}`);
         return res.json({
           success: true,
           status: 'expired',
