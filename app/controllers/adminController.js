@@ -219,10 +219,11 @@ class AdminController {
         attributes: ['id', 'ticket_number', 'name', 'last_name', 'province', 'ticket_validated', 'created_at']
       });
 
-      // Información del webhook de n8n
+      // Información del webhook de respuesta (donde n8n debe enviar la respuesta)
       const config = require('../config/env');
       const webhookInfo = {
-        url: config.n8nWebhookUrl,
+        responseUrl: `${req.protocol}://${req.get('host')}/api/webhook/validation-response`,
+        n8nWebhookUrl: config.n8nWebhookUrl,
         user: config.n8nWebhookUser,
         examplePayload: {
           image: "base64_encoded_image_data",

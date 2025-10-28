@@ -86,8 +86,11 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <h6>URL del Webhook:</h6>
-                                        <code class="d-block mb-3 p-2 bg-light rounded"><%= webhookInfo.url %></code>
+                                        <h6>URL donde n8n debe enviar respuesta:</h6>
+                                        <code class="d-block mb-3 p-2 bg-light rounded"><%= webhookInfo.responseUrl %></code>
+
+                                        <h6>URL del Webhook n8n (para envío):</h6>
+                                        <code class="d-block mb-3 p-2 bg-light rounded"><%= webhookInfo.n8nWebhookUrl %></code>
 
                                         <h6>Credenciales:</h6>
                                         <p><strong>Usuario:</strong> <%= webhookInfo.user %></p>
@@ -103,7 +106,7 @@
                                 </div>
                                 <div class="alert alert-info mt-3">
                                     <strong>Nota:</strong> La aplicación envía la imagen en base64 al webhook de n8n para validación automática.
-                                    n8n debe responder con un JSON indicando si el ticket es válido o no.
+                                    n8n debe procesar la imagen y enviar la respuesta al endpoint de respuesta mostrado arriba.
                                 </div>
                             </div>
                         </div>
