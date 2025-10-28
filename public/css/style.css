@@ -202,10 +202,296 @@ body {
     margin: 20px 0;
 }
 
-/* Icono de éxito */
-.success-icon {
-    font-size: 5rem;
-    color: #28a745;
+/* Comprobante de participación */
+.participation-receipt {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 2px solid var(--brand-gray);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Header del comprobante */
+.receipt-header {
+    background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-blue) 100%);
+    color: white;
+    padding: 20px;
+    border-bottom: 3px solid var(--brand-gray);
+}
+
+.receipt-logo {
+    max-height: 60px;
+    max-width: 120px;
+    object-fit: contain;
+}
+
+.receipt-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+.receipt-subtitle {
+    font-size: 1rem;
+    margin: 5px 0 0 0;
+    opacity: 0.9;
+    color: white;
+}
+
+.success-badge {
+    background: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.success-badge i {
+    font-size: 1.2rem;
+}
+
+/* Número de participación */
+.participation-number {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 2px solid var(--brand-gray);
+}
+
+.number-label {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.number-value {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--brand-red);
+    margin: 15px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: 3px;
+}
+
+.number-description {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+/* Detalles del participante */
+.participant-details, .raffle-info, .important-notes {
+    padding: 25px 20px;
+    border-bottom: 1px solid var(--brand-gray);
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--brand-blue);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid var(--brand-blue);
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.detail-item span {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+/* Información del sorteo */
+.info-content p {
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+.info-content strong {
+    color: var(--brand-blue);
+}
+
+/* Notas importantes */
+.notes-list {
+    padding-left: 20px;
+}
+
+.notes-list li {
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+
+.notes-list li:before {
+    content: "✓";
+    color: var(--brand-blue);
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Código de verificación */
+.verification-code {
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-sky-blue) 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid var(--brand-gray);
+}
+
+.code-label {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.code-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Footer del comprobante */
+.receipt-footer {
+    background: #f8f9fa;
+    padding: 25px 20px;
+}
+
+.signature-line {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.signature-line .line {
+    height: 2px;
+    background: var(--brand-gray);
+    margin-bottom: 5px;
+    width: 200px;
+    margin: 0 auto 5px auto;
+}
+
+.signature-line .label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.footer-text {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--brand-gray);
+}
+
+.footer-text small {
+    color: var(--text-light);
+}
+
+/* Botones de acción */
+.action-buttons {
+    text-align: center;
+}
+
+.action-buttons .btn {
+    margin: 0 10px;
+    min-width: 180px;
+}
+
+/* Mensaje de felicitación */
+.congratulations-message {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.congratulations-message .alert {
+    border-radius: var(--border-radius);
+    border: none;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.congratulations-message .alert-heading {
+    color: #155724;
+    font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .participation-receipt {
+        margin: 0 15px;
+    }
+
+    .receipt-header {
+        padding: 15px;
+    }
+
+    .receipt-title {
+        font-size: 1.5rem;
+    }
+
+    .number-value {
+        font-size: 3rem;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons .btn {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
+/* Estilos de impresión */
+@media print {
+    .action-buttons, .fixed-header, footer {
+        display: none !important;
+    }
+
+    .participation-receipt {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .receipt-header {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .success-badge {
+        background: #28a745 !important;
+        -webkit-print-color-adjust: exact;
+    }
 }
 
 /* Formularios */

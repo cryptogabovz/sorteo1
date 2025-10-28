@@ -26,68 +26,159 @@
         <!-- Contenido principal -->
         <main class="container my-5">
             <div class="row justify-content-center">
-                <div class="col-lg-6">
-                    <!-- Mensaje de éxito -->
-                    <div class="card shadow border-success">
-                        <div class="card-body text-center p-5">
-                            <div class="success-icon mb-4">
-                                <i class="fas fa-check-circle" style="color: var(--brand-blue); font-size: 5rem;"></i>
-                            </div>
-                            <h2 class="card-title text-success mb-4">¡Felicitaciones!</h2>
-                            <p class="card-text mb-4">
-                                Tu registro ha sido completado exitosamente.
-                                Ya eres participante oficial del sorteo.
-                            </p>
-
-                            <!-- Número asignado -->
-                            <div class="ticket-number mb-4">
-                                <div class="ticket-label">Tu número de participación:</div>
-                                <div class="ticket-value" id="ticketNumber"><%= data.ticketNumber %></div>
-                            </div>
-
-                            <!-- Información del participante -->
-                            <div class="participant-info mb-4">
-                                <div class="row">
-                                    <div class="col-sm-6">
-                                        <strong>Nombre:</strong><br>
-                                        <%= data.name %> <%= data.lastName %>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <strong>Número:</strong><br>
-                                        <%= data.ticketNumber %>
+                <div class="col-lg-8">
+                    <!-- Comprobante de Participación -->
+                    <div class="participation-receipt">
+                        <!-- Header del comprobante -->
+                        <div class="receipt-header">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <img src="/images/Logo.png" alt="Logo" class="receipt-logo">
+                                </div>
+                                <div class="col">
+                                    <h2 class="receipt-title">Comprobante de Participación</h2>
+                                    <p class="receipt-subtitle">Sistema de Sorteo</p>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="success-badge">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>VÁLIDO</span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Instrucciones -->
-                            <div class="alert alert-info">
-                                <h6 class="alert-heading">📅 Próximos pasos:</h6>
-                                <ul class="mb-0 text-start">
-                                    <li>Guarda este número para futuras referencias</li>
-                                    <li>El sorteo se realizará en fecha por anunciar</li>
-                                    <li>Te contactaremos si resultas ganador</li>
-                                    <li>Mantén tu información actualizada</li>
-                                </ul>
+                        <!-- Número de participación destacado -->
+                        <div class="participation-number">
+                            <div class="number-label">Tu Número de Participación</div>
+                            <div class="number-value"><%= data.ticketNumber %></div>
+                            <div class="number-description">Este número es único e intransferible</div>
+                        </div>
+
+                        <!-- Información del participante -->
+                        <div class="participant-details">
+                            <h4 class="section-title">
+                                <i class="fas fa-user me-2" style="color: var(--brand-blue);"></i>
+                                Información del Participante
+                            </h4>
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <label>Nombre Completo:</label>
+                                    <span><%= data.name %> <%= data.lastName %></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Cédula:</label>
+                                    <span><%= data.cedula %></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Teléfono:</label>
+                                    <span><%= data.phone %></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Provincia:</label>
+                                    <span><%= data.province %></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Fecha de Registro:</label>
+                                    <span><%= new Date().toLocaleDateString('es-ES', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    }) %></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Número de Ticket:</label>
+                                    <span><%= data.ticketNumber %></span>
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- Botones de acción -->
-                            <div class="mt-4">
-                                <button onclick="window.print()" class="btn btn-outline-primary me-2">
-                                    🖨️ Imprimir
+                        <!-- Información del sorteo -->
+                        <div class="raffle-info">
+                            <h4 class="section-title">
+                                <i class="fas fa-trophy me-2" style="color: var(--brand-blue);"></i>
+                                Información del Sorteo
+                            </h4>
+                            <div class="info-content">
+                                <p><strong>Estado:</strong> Participante registrado exitosamente</p>
+                                <p><strong>Fecha del sorteo:</strong> Por anunciar</p>
+                                <p><strong>Forma de contacto:</strong> Te contactaremos si resultas ganador</p>
+                                <p><strong>Premios:</strong> Información disponible próximamente</p>
+                            </div>
+                        </div>
+
+                        <!-- Instrucciones importantes -->
+                        <div class="important-notes">
+                            <h4 class="section-title">
+                                <i class="fas fa-exclamation-triangle me-2" style="color: var(--brand-blue);"></i>
+                                Información Importante
+                            </h4>
+                            <ul class="notes-list">
+                                <li>Guarda este comprobante para futuras referencias</li>
+                                <li>Este número es único y no puede ser transferido</li>
+                                <li>Mantén tu información de contacto actualizada</li>
+                                <li>El sorteo se realizará bajo normas de transparencia</li>
+                                <li>Solo participantes con tickets validados pueden ganar</li>
+                            </ul>
+                        </div>
+
+                        <!-- Código QR o código de verificación (opcional) -->
+                        <div class="verification-code">
+                            <div class="code-label">Código de Verificación:</div>
+                            <div class="code-value"><%= data.ticketNumber %>-<%= Date.now().toString().slice(-6) %></div>
+                        </div>
+
+                        <!-- Footer del comprobante -->
+                        <div class="receipt-footer">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="signature-line">
+                                        <div class="line"></div>
+                                        <div class="label">Firma del Participante</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="signature-line">
+                                        <div class="line"></div>
+                                        <div class="label">Sistema de Sorteo</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer-text">
+                                <small>Este comprobante es generado automáticamente por el sistema y tiene validez oficial.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="action-buttons mt-4">
+                        <div class="row justify-content-center">
+                            <div class="col-auto">
+                                <button onclick="window.print()" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-print me-2" style="color: white;"></i>
+                                    Imprimir Comprobante
                                 </button>
-                                <a href="/" class="btn btn-success">
-                                    🏠 Ir al inicio
+                            </div>
+                            <div class="col-auto">
+                                <a href="/" class="btn btn-outline-primary btn-lg">
+                                    <i class="fas fa-home me-2" style="color: var(--brand-blue);"></i>
+                                    Ir al Inicio
                                 </a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Información adicional -->
-                    <div class="text-center mt-3 text-muted">
-                        <small>
-                            Recuerda que este número es único e intransferible.<br>
-                            ¡Mucha suerte en el sorteo!
-                        </small>
+                    <!-- Mensaje de felicitación -->
+                    <div class="congratulations-message mt-4">
+                        <div class="alert alert-success text-center">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                ¡Felicitaciones!
+                            </h4>
+                            <p class="mb-0">Tu participación ha sido registrada exitosamente. ¡Mucha suerte en el sorteo!</p>
+                        </div>
                     </div>
                 </div>
             </div>
