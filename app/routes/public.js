@@ -62,4 +62,7 @@ router.get('/exito', (req, res) => {
 // API: Obtener estadísticas públicas (opcional)
 router.get('/api/stats', participantController.getPublicStats);
 
+// Webhook: Recibir respuesta de validación de n8n
+router.post('/api/webhook/validation-response', validationController.receiveValidationResponse);
+
 module.exports = router;

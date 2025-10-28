@@ -155,6 +155,42 @@ class ValidationController {
       });
     }
   }
+
+  // Recibir respuesta de validación de n8n
+  async receiveValidationResponse(req, res) {
+    try {
+      const { valid, reason, confidence, sessionId } = req.body;
+
+      console.log('🔔 Respuesta de validación recibida de n8n:', {
+        valid,
+        reason,
+        confidence,
+        sessionId: sessionId ? 'presente' : 'ausente'
+      });
+
+      // Aquí puedes implementar lógica adicional si es necesario
+      // Por ejemplo, actualizar el estado de validación en la base de datos
+      // o enviar notificaciones
+
+      res.json({
+        success: true,
+        message: 'Respuesta de validación procesada correctamente',
+        received: {
+          valid,
+          reason,
+          confidence,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Error procesando respuesta de validación:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error procesando respuesta de validación'
+      });
+    }
+  }
 }
 
 module.exports = new ValidationController();
