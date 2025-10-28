@@ -1,3 +1,32 @@
+/* Header fijo */
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    padding: 10px 0;
+}
+
+.header-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.header-logo {
+    max-height: 50px;
+    max-width: 150px;
+    object-fit: contain;
+}
+
+/* Ajustar contenido principal para header fijo */
+.main-content {
+    margin-top: 80px;
+}
+
 /* Estilos generales */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

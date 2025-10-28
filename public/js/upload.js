@@ -9,6 +9,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('uploadForm');
 
     let selectedFile = null;
+    let lottieAnimation = null;
+
+    // Inicializar Lottie animation
+    function initLottie() {
+        if (typeof lottie !== 'undefined') {
+            lottieAnimation = lottie.loadAnimation({
+                container: document.getElementById('lottieContainer'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: false,
+                path: '/images/search.lottie'
+            });
+        }
+    }
+
+    // Llamar a initLottie cuando el DOM esté listo
+    initLottie();
 
     // Eventos del área de drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -168,9 +185,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showProcessingScreen(correlationId) {
-        // Ocultar formulario y mostrar pantalla de procesamiento
-        document.getElementById('uploadForm').style.display = 'none';
+        // Ocultar contenedor de subida y mostrar pantalla de procesamiento
+        document.getElementById('uploadContainer').style.display = 'none';
         document.getElementById('processingScreen').style.display = 'block';
+
+        // Iniciar Lottie animation
+        if (lottieAnimation) {
+            lottieAnimation.play();
+        }
 
         // Iniciar polling para verificar estado
         let pollCount = 0;
@@ -187,6 +209,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (result.status === 'approved') {
                         // Validación exitosa
                         clearInterval(pollInterval);
+                        if (lottieAnimation) {
+                            lottieAnimation.stop();
+                        }
                         showMessage('¡Ticket válido! Redirigiendo...', 'success');
                         setTimeout(() => {
                             window.location.href = '/registro';
@@ -194,14 +219,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else if (result.status === 'rejected') {
                         // Validación rechazada - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
+                        if (lottieAnimation) {
+                            lottieAnimation.stop();
+                        }
                         showProcessingError(result.reason || 'Ticket no válido');
                     } else if (result.status === 'expired') {
                         // Validación expirada - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
+                        if (lottieAnimation) {
+                            lottieAnimation.stop();
+                        }
                         showProcessingError('La validación ha expirado. Intente nuevamente.');
                     } else if (pollCount >= maxPolls) {
                         // Timeout - mostrar en pantalla de procesamiento
                         clearInterval(pollInterval);
+                        if (lottieAnimation) {
+                            lottieAnimation.stop();
+                        }
                         showProcessingError('Tiempo de espera agotado. Intente nuevamente.');
                     }
                     // Si aún está pendiente, continuar polling

@@ -8,12 +8,21 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container-fluid">
-        <!-- Header -->
-        <header class="text-center py-4 bg-primary text-white">
-            <h1 class="display-6">📸 Subir Ticket</h1>
-            <p class="mb-0">Paso 1: Valida tu ticket para participar</p>
-        </header>
+    <!-- Header fijo con logo -->
+    <header class="fixed-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-6">
+                    <h1 class="header-title mb-0">Sistema de Sorteo</h1>
+                </div>
+                <div class="col-6 text-end">
+                    <img src="/images/Logo.png" alt="Logo" class="header-logo">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid main-content">
 
         <!-- Contenido principal -->
         <main class="container my-5">
@@ -58,9 +67,7 @@
                             <!-- Pantalla de procesamiento -->
                             <div id="processingScreen" class="text-center mt-4" style="display: none;">
                                 <div class="processing-animation mb-3">
-                                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                                        <span class="visually-hidden">Procesando...</span>
-                                    </div>
+                                    <div id="lottieContainer" style="width: 200px; height: 200px; margin: 0 auto;"></div>
                                 </div>
                                 <h4 id="processingTitle">Procesando tu imagen...</h4>
                                 <p id="processingMessage" class="text-muted">Estamos validando tu ticket automáticamente. Esto puede tomar unos segundos.</p>
@@ -106,6 +113,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script src="/js/upload.js"></script>
 </body>
 </html>
