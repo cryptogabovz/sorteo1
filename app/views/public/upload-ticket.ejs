@@ -12,11 +12,11 @@
     <header class="fixed-header">
         <div class="container-fluid">
             <div class="row align-items-center">
-                <div class="col-6">
-                    <h1 class="header-title mb-0">Sistema de Sorteo</h1>
-                </div>
-                <div class="col-6 text-end">
+                <div class="col-auto">
                     <img src="/images/Logo.png" alt="Logo" class="header-logo">
+                </div>
+                <div class="col">
+                    <h1 class="header-title mb-0 text-center">Sistema de Sorteo</h1>
                 </div>
             </div>
         </div>
@@ -67,11 +67,11 @@
                             <!-- Pantalla de procesamiento -->
                             <div id="processingScreen" class="text-center mt-4" style="display: none;">
                                 <div class="processing-animation mb-3">
-                                    <div id="lottieContainer" style="width: 200px; height: 200px; margin: 0 auto;"></div>
+                                    <div id="lottieContainer" style="width: 300px; height: 300px; margin: 0 auto;"></div>
                                 </div>
                                 <h4 id="processingTitle">Procesando tu imagen...</h4>
                                 <p id="processingMessage" class="text-muted">Estamos validando tu ticket automáticamente. Esto puede tomar unos segundos.</p>
-                                <div class="progress mt-3">
+                                <div class="progress mt-3" style="display: none;">
                                     <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%"></div>
                                 </div>
 
