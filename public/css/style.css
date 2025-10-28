@@ -571,3 +571,77 @@ footer {
     background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
     border-color: #bee5eb;
 }
+
+/* Animación del escáner */
+.scanner-container {
+    position: relative;
+    display: inline-block;
+    margin: 20px auto;
+}
+
+.image-frame {
+    position: relative;
+    display: inline-block;
+    border: 3px solid #007bff;
+    border-radius: 15px;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+    overflow: hidden;
+}
+
+.scanned-ticket {
+    max-width: 400px;
+    max-height: 300px;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+}
+
+.scanner-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #28a745 50%, transparent 100%);
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.8);
+    animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+    0% {
+        top: 0;
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        top: 100%;
+        opacity: 1;
+    }
+}
+
+/* Efecto de brillo en el marco */
+.image-frame::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #007bff, #28a745, #007bff);
+    border-radius: 18px;
+    z-index: -1;
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}

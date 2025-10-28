@@ -233,7 +233,18 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('uploadContainer').style.display = 'none';
         document.getElementById('processingScreen').style.display = 'block';
 
-        // Iniciar Lottie animation
+        // Mostrar la imagen subida en el escáner
+        const scannedImage = document.getElementById('scannedImage');
+        if (selectedFile && scannedImage) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                scannedImage.src = e.target.result;
+                scannedImage.style.display = 'block';
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        // Iniciar Lottie animation (si existe)
         if (lottieAnimation) {
             lottieAnimation.play();
             console.log('Lottie animation started');
@@ -259,6 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (lottieAnimation) {
                             lottieAnimation.stop();
                         }
+                        console.log('✅ Validación exitosa - Redirigiendo a registro');
+                        console.log('Sesión actual:', result);
                         showMessage('¡Ticket válido! Redirigiendo...', 'success');
                         setTimeout(() => {
                             window.location.href = '/registro';

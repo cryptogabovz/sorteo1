@@ -72,7 +72,13 @@
                             <!-- Pantalla de procesamiento -->
                             <div id="processingScreen" class="text-center mt-4" style="display: none;">
                                 <div class="processing-animation mb-3">
-                                    <div id="lottieContainer" style="width: 300px; height: 300px; margin: 0 auto; background: transparent; border: 2px solid #007bff; border-radius: 10px;"></div>
+                                    <!-- Contenedor de la imagen con marco y escáner -->
+                                    <div class="scanner-container">
+                                        <div class="image-frame">
+                                            <img id="scannedImage" src="" alt="Ticket" class="img-fluid scanned-ticket">
+                                            <div class="scanner-line"></div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <h4 id="processingTitle">Procesando tu imagen...</h4>
                                 <p id="processingMessage" class="text-muted">Estamos validando tu ticket automáticamente. Esto puede tomar unos segundos.</p>
