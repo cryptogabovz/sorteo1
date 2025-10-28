@@ -467,10 +467,25 @@ class AdminController {
         });
       } else {
         // Vista individual (por compatibilidad)
-        const participant = await Participant.findByPk(parseInt(id));
+        const participantId = parseInt(id);
+        if (isNaN(participantId)) {
+          console.log(`❌ ID inválido: ${id}`);
+          return res.render('admin/participants', {
+            title: 'ID inválido',
+            error: 'ID de participante inválido',
+            participants: [],
+            provinces: [],
+            currentPage: 1,
+            totalPages: 1,
+            totalCount: 0,
+            filters: {}
+          });
+        }
+
+        const participant = await Participant.findByPk(participantId);
 
         if (!participant) {
-          console.log(`❌ Participante con ID ${id} no encontrado`);
+          console.log(`❌ Participante con ID ${participantId} no encontrado`);
           return res.render('admin/participants', {
             title: 'Participante no encontrado',
             error: 'Participante no encontrado',
