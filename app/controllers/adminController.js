@@ -48,7 +48,8 @@ class AdminController {
 
       // Verificar si las credenciales coinciden con las variables de entorno
       console.log('🔍 Verificando credenciales contra variables de entorno...');
-      console.log(`   Variables de entorno cargadas: ADMIN_USERNAME='${process.env.ADMIN_USERNAME}', ADMIN_PASSWORD='${process.env.ADMIN_PASSWORD ? '[SET]' : '[NOT SET]'}'`);
+      console.log(`   Variables de entorno cargadas: ADMIN_USERNAME='${process.env.ADMIN_USERNAME || '[NOT SET]'}', ADMIN_PASSWORD='${process.env.ADMIN_PASSWORD ? '[SET]' : '[NOT SET]'}`);
+      console.log(`   Configuración cargada: adminUsername='${config.adminUsername}', adminPassword='${config.adminPassword ? '[SET]' : '[NOT SET]'}`);
 
       let admin;
 

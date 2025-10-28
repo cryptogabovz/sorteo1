@@ -150,7 +150,7 @@
                                                         </td>
                                                         <td><%= new Date(participant.created_at).toLocaleDateString('es-ES') %></td>
                                                         <td>
-                                                            <a href="/admin/participants/<%= participant.id %>" class="btn btn-sm btn-outline-primary">Ver</a>
+                                                            <a href="/admin/participants/<%= participant.id %>" class="btn btn-sm btn-outline-primary" onclick="console.log('Clic en Ver para ID:', '<%= participant.id %>')">Ver</a>
                                                         </td>
                                                     </tr>
                                                 <% }); %>
