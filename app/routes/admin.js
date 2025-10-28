@@ -32,4 +32,10 @@ router.get('/api/metrics', authMiddleware, adminController.getMetrics);
 // Página de configuración
 router.get('/configuracion', authMiddleware, adminController.showConfiguracion);
 
+// Cambiar contraseña de admin
+router.post('/configuracion/change-password', authMiddleware, adminController.changePassword);
+
+// Limpiar todos los datos
+router.post('/configuracion/clear-data', authMiddleware, adminController.clearAllData);
+
 module.exports = router;

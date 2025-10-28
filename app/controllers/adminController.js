@@ -571,6 +571,149 @@ class AdminController {
     }
   }
 
+  // Cambiar contraseña del administrador
+  async changePassword(req, res) {
+    try {
+      const { currentPassword, newPassword, confirmPassword } = req.body;
+      const adminId = req.session.adminId;
+
+      console.log(`🔐 Intento de cambio de contraseña para admin ID: ${adminId}`);
+
+      // Validaciones básicas
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        console.log('❌ Cambio de contraseña fallido: campos vacíos');
+        return res.json({
+          success: false,
+          message: 'Todos los campos son obligatorios'
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        console.log('❌ Cambio de contraseña fallido: contraseñas no coinciden');
+        return res.json({
+          success: false,
+          message: 'La nueva contraseña y su confirmación no coinciden'
+        });
+      }
+
+      if (newPassword.length < 6) {
+        console.log('❌ Cambio de contraseña fallido: contraseña muy corta');
+        return res.json({
+          success: false,
+          message: 'La nueva contraseña debe tener al menos 6 caracteres'
+        });
+      }
+
+      // Buscar usuario admin
+      const admin = await AdminUser.findByPk(adminId);
+      if (!admin) {
+        console.log(`❌ Usuario admin con ID ${adminId} no encontrado`);
+        return res.json({
+          success: false,
+          message: 'Usuario no encontrado'
+        });
+      }
+
+      // Verificar contraseña actual
+      const isValidCurrentPassword = await admin.checkPassword(currentPassword);
+      if (!isValidCurrentPassword) {
+        console.log(`❌ Cambio de contraseña fallido: contraseña actual incorrecta para admin ${admin.username}`);
+        return res.json({
+          success: false,
+          message: 'La contraseña actual es incorrecta'
+        });
+      }
+
+      // Cambiar contraseña
+      const bcrypt = require('bcrypt');
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      await admin.update({ password_hash: hashedPassword });
+
+      console.log(`✅ Contraseña cambiada exitosamente para admin: ${admin.username}`);
+
+      res.json({
+        success: true,
+        message: 'Contraseña cambiada exitosamente'
+      });
+
+    } catch (error) {
+      console.error('❌ Error cambiando contraseña:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Limpiar todos los datos del sistema
+  async clearAllData(req, res) {
+    try {
+      const { confirmation } = req.body;
+      const adminId = req.session.adminId;
+
+      console.log(`🗑️ Intento de limpieza de datos por admin ID: ${adminId}`);
+
+      // Verificar confirmación
+      if (confirmation !== 'BORRAR') {
+        console.log('❌ Limpieza de datos fallida: confirmación incorrecta');
+        return res.json({
+          success: false,
+          message: 'Debe escribir exactamente "BORRAR" para confirmar'
+        });
+      }
+
+      // Obtener estadísticas antes de borrar
+      const statsBefore = await Participant.getStats();
+      console.log(`📊 Datos antes de limpieza: ${statsBefore.total_participants} participantes`);
+
+      // Iniciar transacción para asegurar integridad
+      const { sequelize } = require('../config/database');
+      const transaction = await sequelize.transaction();
+
+      try {
+        // Eliminar todos los participantes
+        const deletedParticipants = await Participant.destroy({ transaction });
+        console.log(`✅ Eliminados ${deletedParticipants} participantes`);
+
+        // Limpiar tabla de validaciones temporales
+        const TicketValidation = require('../models/TicketValidation');
+        const deletedValidations = await TicketValidation.destroy({ transaction });
+        console.log(`✅ Eliminadas ${deletedValidations} validaciones temporales`);
+
+        // Confirmar transacción
+        await transaction.commit();
+
+        console.log(`🎉 Limpieza de datos completada exitosamente`);
+
+        res.json({
+          success: true,
+          message: `Datos limpiados exitosamente. Se eliminaron ${deletedParticipants} participantes y ${deletedValidations} validaciones temporales.`,
+          data: {
+            deletedParticipants,
+            deletedValidations
+          }
+        });
+
+      } catch (transactionError) {
+        // Revertir transacción en caso de error
+        await transaction.rollback();
+        console.error('❌ Error en transacción de limpieza:', transactionError);
+        throw transactionError;
+      }
+
+    } catch (error) {
+      console.error('❌ Error limpiando datos:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor al limpiar datos'
+      });
+    }
+  }
+
   // Eliminar un ticket específico (no todo el usuario)
   async deleteTicket(req, res) {
     try {
