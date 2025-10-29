@@ -34,6 +34,7 @@ const Participant = sequelize.define('participants', {
   cedula: {
     type: DataTypes.STRING(20),
     allowNull: false,
+    unique: false, // Permitir múltiples registros con misma cédula
     validate: {
       notEmpty: true,
       len: [5, 20]
