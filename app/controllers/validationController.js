@@ -111,25 +111,33 @@ class ValidationController {
         mimetype: req.file.mimetype,
         timestamp: new Date().toISOString(),
         source: 'sorteo-web-upload',
-        response_url: `${req.protocol}://${req.get('host')}/api/webhook/validation-response`
+        response_url: `${req.protocol}://${req.get('host')}/api/webhook/validation-response`,
+        // Agregar información adicional para debugging
+        file_size: req.file.size,
+        upload_timestamp: new Date().toISOString()
       };
 
       console.log(`📤 Enviando imagen a n8n - Correlation ID: ${correlationId}`);
+      console.log(`📤 URL n8n: ${config.n8nWebhookUrl}`);
+      console.log(`📤 Tamaño imagen: ${(base64Image.length / 1024 / 1024).toFixed(2)} MB`);
+      console.log(`📤 Response URL: ${payload.response_url}`);
 
       // Llamar a webhook de n8n con timeout reducido (solo para envío)
       const auth = Buffer.from(`${config.n8nWebhookUser}:${config.n8nWebhookPass}`).toString('base64');
 
       try {
-        await axios.post(config.n8nWebhookUrl, payload, {
-          timeout: 5000, // Solo 5 segundos para envío, no esperamos respuesta
+        const n8nResponse = await axios.post(config.n8nWebhookUrl, payload, {
+          timeout: 10000, // Aumentar a 10 segundos para envío
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Basic ${auth}`
           }
         });
         console.log(`📤 Imagen enviada exitosamente a n8n - Correlation ID: ${correlationId}`);
+        console.log(`📤 Respuesta n8n:`, n8nResponse.data);
       } catch (n8nError) {
         console.error(`⚠️ Error enviando a n8n, pero continuamos:`, n8nError.message);
+        console.error(`⚠️ Detalles del error:`, n8nError.response?.data || n8nError.message);
         // No fallamos aquí, continuamos con el flujo asíncrono
       }
 
