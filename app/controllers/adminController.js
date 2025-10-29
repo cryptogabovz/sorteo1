@@ -33,17 +33,36 @@ class AdminController {
       console.log(`   - NODE_ENV: '${config.nodeEnv}'`);
 
       // Verificar conexión a BD primero
+      console.log('🔍 Verificando estado de conexión a BD...');
       const { sequelize } = require('../config/database');
-      try {
-        await sequelize.authenticate();
-        console.log('✅ Conexión a BD OK');
-      } catch (dbError) {
-        console.error('❌ Error de conexión a BD:', dbError.message);
-        console.error('Stack BD:', dbError.stack);
-        return res.render('admin/login', {
-          title: 'Login Administrador',
-          error: 'Error de conexión a la base de datos'
-        });
+
+      // Verificar si la conexión está cerrada
+      if (sequelize.connectionManager.pool && sequelize.connectionManager.pool.destroyed) {
+        console.log('⚠️ Pool de conexiones destruido, intentando reconectar...');
+        try {
+          // Forzar reconexión
+          await sequelize.close();
+          await sequelize.authenticate();
+          console.log('✅ Reconexión a BD exitosa');
+        } catch (reconnectError) {
+          console.error('❌ Error de reconexión a BD:', reconnectError.message);
+          return res.render('admin/login', {
+            title: 'Login Administrador',
+            error: 'Error de conexión a la base de datos'
+          });
+        }
+      } else {
+        try {
+          await sequelize.authenticate();
+          console.log('✅ Conexión a BD OK');
+        } catch (dbError) {
+          console.error('❌ Error de conexión a BD:', dbError.message);
+          console.error('Stack BD:', dbError.stack);
+          return res.render('admin/login', {
+            title: 'Login Administrador',
+            error: 'Error de conexión a la base de datos'
+          });
+        }
       }
 
       // Verificar si las credenciales coinciden con las variables de entorno
