@@ -20,7 +20,7 @@ EXPOSE 3000
 
 # Ejecutar corrección de restricciones antes de iniciar
 RUN echo "Ejecutando corrección de restricciones..."
-RUN RUN_FIX_CONSTRAINTS=true node fix-constraints.js
+RUN node fix-constraints.js
 
 # Comando para ejecutar la aplicación
 CMD ["npm", "start"]

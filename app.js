@@ -53,14 +53,17 @@ app.use((req, res) => {
 // Función para iniciar servidor
 const startServer = async () => {
   try {
-    // Ejecutar corrección de restricciones si es necesario
-    if (process.env.RUN_FIX_CONSTRAINTS === 'true') {
-      console.log('🔧 Ejecutando corrección de restricciones...');
+    // Ejecutar corrección de restricciones siempre en producción
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔧 Ejecutando corrección de restricciones en producción...');
       try {
         await require('./fix-constraints')();
         console.log('✅ Corrección de restricciones completada');
       } catch (fixError) {
         console.error('❌ Error en corrección de restricciones:', fixError.message);
+        console.error('Stack trace:', fixError.stack);
+        // No bloquear el inicio por errores de corrección
+        console.log('⚠️ Continuando con el inicio del servidor...');
       }
     }
 
