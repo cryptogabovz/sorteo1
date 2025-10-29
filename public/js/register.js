@@ -51,8 +51,29 @@ document.addEventListener('DOMContentLoaded', function() {
             let recaptchaToken = null;
             if (typeof grecaptcha !== 'undefined') {
                 console.log('🔒 Ejecutando reCAPTCHA v3...');
-                recaptchaToken = await grecaptcha.execute('<%= typeof recaptcha !== "undefined" ? recaptcha.siteKey : "" %>', { action: 'register' });
-                console.log('✅ Token reCAPTCHA obtenido:', recaptchaToken ? recaptchaToken.substring(0, 20) + '...' : 'null');
+
+                // Verificar que grecaptcha esté listo
+                await new Promise((resolve) => {
+                    if (grecaptcha.ready) {
+                        grecaptcha.ready(resolve);
+                    } else {
+                        // Fallback si ready no está disponible
+                        setTimeout(resolve, 1000);
+                    }
+                });
+
+                // Obtener siteKey desde variable global o configuración
+                const siteKey = window.RECAPTCHA_SITE_KEY || '<%= typeof recaptcha !== "undefined" ? recaptcha.siteKey : "" %>';
+                console.log('🔑 Usando siteKey:', siteKey ? siteKey.substring(0, 10) + '...' : 'null');
+
+                if (siteKey && siteKey.trim()) {
+                    recaptchaToken = await grecaptcha.execute(siteKey, { action: 'register' });
+                    console.log('✅ Token reCAPTCHA obtenido:', recaptchaToken ? recaptchaToken.substring(0, 20) + '...' : 'null');
+                } else {
+                    console.log('⚠️ SiteKey no disponible, omitiendo reCAPTCHA');
+                }
+            } else {
+                console.log('⚠️ grecaptcha no disponible, omitiendo reCAPTCHA');
             }
 
             const formData = new FormData(registerForm);
