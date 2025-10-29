@@ -104,6 +104,7 @@ class ParticipantController {
           console.log('✅ reCAPTCHA verificado exitosamente');
         } catch (recaptchaError) {
           console.error('❌ Error verificando reCAPTCHA:', recaptchaError);
+          console.error('Stack trace reCAPTCHA:', recaptchaError.stack);
           // No bloquear el registro por errores de reCAPTCHA, solo loggear
           console.log('⚠️ Continuando sin verificación reCAPTCHA por error');
         }
@@ -270,7 +271,46 @@ class ParticipantController {
       // Manejar errores de unicidad - ahora permitimos múltiples registros
       if (error.name === 'SequelizeUniqueConstraintError') {
         console.log('⚠️ Error de unicidad detectado, pero permitiendo múltiples participaciones');
-        // No devolver error, continuar normalmente
+        console.log('📋 Detalles del error de unicidad:', error.fields);
+
+        // Para cédula duplicada, permitir continuar (múltiples tickets por persona)
+        if (error.fields && error.fields.cedula) {
+          console.log('✅ Permitido: Múltiples participaciones con misma cédula');
+
+          // Obtener próximo número de ticket
+          const ticketNumber = await Participant.getNextTicketNumber();
+
+          // Crear participante con cédula duplicada (permitido)
+          const participant = await Participant.create({
+            ticket_number: ticketNumber,
+            name: sanitizedData.name,
+            last_name: sanitizedData.lastName,
+            cedula: sanitizedData.cedula, // Permitir duplicado
+            phone: sanitizedData.phone,
+            province: sanitizedData.province,
+            ticket_validated: true,
+            ticket_image_url: validationResult.ticketImageUrl || null
+          });
+
+          // Limpiar sesión
+          delete req.session.validationResult;
+
+          return res.json({
+            success: true,
+            message: 'Participante registrado exitosamente (participación adicional)',
+            data: {
+              ticketNumber: participant.ticket_number,
+              name: participant.name,
+              lastName: participant.last_name
+            }
+          });
+        } else {
+          // Para otros campos únicos, devolver error
+          return res.status(400).json({
+            success: false,
+            message: 'Ya existe un registro con estos datos'
+          });
+        }
       }
 
       // Manejar errores de base de datos
