@@ -118,7 +118,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@mui/x-charts@7.0.0/umd/index.js"></script>
     <script src="/js/admin-dashboard.js"></script>
-    <div id="chart-container"></div>
+
     <script>
         // Datos del gráfico
         const dailyMetrics = <%- JSON.stringify(dailyMetrics || []) %>;
@@ -158,40 +158,79 @@
             return { labels, data: chartData };
         }
 
-        // Función para renderizar el gráfico con MUI
-        function renderChart(data, days) {
+        // Componente React para el gráfico
+        function DailyChart({ data, days }) {
             const chartData = prepareChartData(data, days);
             console.log('Renderizando gráfico con:', chartData);
 
-            const { BarChart } = mui.xCharts;
+            return React.createElement(mui.xCharts.BarChart, {
+                xAxis: [{
+                    scaleType: 'band',
+                    data: chartData.labels,
+                    categoryGapRatio: 0.3,
+                    barGapRatio: 0.1,
+                }],
+                series: [{
+                    data: chartData.data,
+                    label: 'Participantes Registrados',
+                    color: '#007bff'
+                }],
+                width: 800,
+                height: 400,
+                margin: { top: 20, right: 30, bottom: 40, left: 60 },
+                grid: { vertical: true, horizontal: true },
+                tooltip: {
+                    trigger: 'axis'
+                }
+            });
+        }
 
-            ReactDOM.render(
-                React.createElement(BarChart, {
-                    xAxis: [{
-                        scaleType: 'band',
-                        data: chartData.labels,
-                        categoryGapRatio: 0.3,
-                        barGapRatio: 0.1,
-                    }],
-                    series: [{
-                        data: chartData.data,
-                        label: 'Participantes Registrados',
-                        color: '#007bff'
-                    }],
-                    width: 800,
-                    height: 400,
-                    margin: { top: 20, right: 30, bottom: 40, left: 60 },
-                    grid: { vertical: true, horizontal: true },
-                    tooltip: {
-                        trigger: 'axis'
+        // Componente principal de la app
+        function App() {
+            const [chartData, setChartData] = React.useState(dailyMetrics);
+            const [days, setDays] = React.useState(currentDays);
+
+            const handleDaysChange = async (newDays) => {
+                setDays(newDays);
+                currentDays = newDays;
+
+                // Actualizar botones activos
+                document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+
+                try {
+                    const response = await fetch(`/admin/api/daily-metrics?days=${newDays}`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        setChartData(result.data);
+                    } else {
+                        console.error('Error cargando métricas:', result.message);
                     }
-                }),
-                document.getElementById('chart-container')
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            };
+
+            return React.createElement('div', null,
+                React.createElement(DailyChart, { data: chartData, days: days })
             );
         }
 
-        // Función para cambiar días
-        async function changeDays(days) {
+        // Renderizar la app React
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('chart-container');
+            if (container) {
+                ReactDOM.render(React.createElement(App), container);
+            } else {
+                console.error('Contenedor del gráfico no encontrado');
+            }
+        });
+
+        // Función global para cambiar días (llamada desde botones HTML)
+        window.changeDays = async function(days) {
             currentDays = days;
 
             // Actualizar botones activos
@@ -205,19 +244,21 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    renderChart(result.data, days);
+                    // Re-renderizar el gráfico con nuevos datos
+                    const container = document.getElementById('chart-container');
+                    if (container) {
+                        ReactDOM.render(
+                            React.createElement(DailyChart, { data: result.data, days: days }),
+                            container
+                        );
+                    }
                 } else {
                     console.error('Error cargando métricas:', result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
             }
-        }
-
-        // Inicializar gráfico al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
-            renderChart(dailyMetrics, currentDays);
-        });
+        };
     </script>
 </body>
 </html>
