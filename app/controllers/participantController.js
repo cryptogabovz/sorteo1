@@ -36,7 +36,9 @@ class ParticipantController {
 
       // Verificar reCAPTCHA si está configurado
       if (config.recaptcha && config.recaptcha.secretKey && config.recaptcha.siteKey) {
+        console.log('🔒 reCAPTCHA configurado, verificando...');
         if (!recaptchaToken) {
+          console.log('❌ Token de reCAPTCHA faltante');
           return res.status(400).json({
             success: false,
             message: 'Por favor, complete la verificación de reCAPTCHA'
@@ -45,11 +47,15 @@ class ParticipantController {
 
         const recaptchaResult = await this.verifyRecaptcha(recaptchaToken);
         if (!recaptchaResult.success) {
+          console.log('❌ Verificación de reCAPTCHA fallida:', recaptchaResult);
           return res.status(400).json({
             success: false,
             message: 'Verificación de reCAPTCHA fallida. Intente nuevamente.'
           });
         }
+        console.log('✅ reCAPTCHA verificado exitosamente');
+      } else {
+        console.log('⚠️ reCAPTCHA no configurado o incompleto, omitiendo verificación');
       }
 
       // Validar aceptación de términos y condiciones
