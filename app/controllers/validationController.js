@@ -71,7 +71,11 @@ class ValidationController {
   // Subir ticket y validar
   async uploadAndValidate(req, res) {
     try {
+      console.log('📤 Iniciando uploadAndValidate...');
+      console.log('Archivo recibido:', req.file ? req.file.filename : 'NINGUNO');
+
       if (!req.file) {
+        console.log('❌ Error: No se recibió ningún archivo');
         return res.status(400).json({
           success: false,
           message: 'No se recibió ningún archivo'
@@ -86,8 +90,19 @@ class ValidationController {
       const fs = require('fs');
       const path = require('path');
       const imagePath = path.join(__dirname, '../../public/uploads', req.file.filename);
+      console.log('📁 Ruta del archivo:', imagePath);
+
+      if (!fs.existsSync(imagePath)) {
+        console.log('❌ Error: Archivo no existe en el sistema de archivos');
+        return res.status(500).json({
+          success: false,
+          message: 'Error procesando la imagen: archivo no encontrado'
+        });
+      }
+
       const imageBuffer = fs.readFileSync(imagePath);
       const base64Image = imageBuffer.toString('base64');
+      console.log('📊 Tamaño imagen convertida:', (base64Image.length / 1024 / 1024).toFixed(2), 'MB');
 
       // Crear registro de validación pendiente
       const expiresAt = new Date();
@@ -126,6 +141,7 @@ class ValidationController {
       const auth = Buffer.from(`${config.n8nWebhookUser}:${config.n8nWebhookPass}`).toString('base64');
 
       try {
+        console.log('🔄 Enviando payload a n8n...');
         const n8nResponse = await axios.post(config.n8nWebhookUrl, payload, {
           timeout: 10000, // Aumentar a 10 segundos para envío
           headers: {
@@ -136,9 +152,22 @@ class ValidationController {
         console.log(`📤 Imagen enviada exitosamente a n8n - Correlation ID: ${correlationId}`);
         console.log(`📤 Respuesta n8n:`, n8nResponse.data);
       } catch (n8nError) {
-        console.error(`⚠️ Error enviando a n8n, pero continuamos:`, n8nError.message);
-        console.error(`⚠️ Detalles del error:`, n8nError.response?.data || n8nError.message);
-        // No fallamos aquí, continuamos con el flujo asíncrono
+        console.error(`⚠️ Error enviando a n8n:`, n8nError.message);
+        console.error(`⚠️ Código de error:`, n8nError.code);
+        console.error(`⚠️ Respuesta n8n:`, n8nError.response?.data);
+        console.error(`⚠️ Status:`, n8nError.response?.status);
+
+        // Si es error de configuración, devolver error inmediato
+        if (n8nError.code === 'ECONNREFUSED' || n8nError.code === 'ENOTFOUND' || n8nError.response?.status === 401) {
+          console.log('❌ Error de configuración n8n - devolviendo error inmediato');
+          return res.status(500).json({
+            success: false,
+            message: 'Error procesando la imagen: servicio de validación no disponible'
+          });
+        }
+
+        // Para otros errores, continuamos con el flujo asíncrono
+        console.log('⚠️ Error temporal, continuando con flujo asíncrono');
       }
 
       // Siempre esperamos respuesta asíncrona por webhook
