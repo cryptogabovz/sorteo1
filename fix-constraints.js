@@ -1,6 +1,7 @@
 const { sequelize } = require('./app/config/database');
 
 async function fixConstraints() {
+  let connectionClosed = false;
   try {
     console.log('🔧 Aplicando corrección final de restricciones...');
 
@@ -128,4 +129,9 @@ async function fixConstraints() {
   }
 }
 
-fixConstraints();
+module.exports = fixConstraints;
+
+// Ejecutar solo si se llama directamente
+if (require.main === module) {
+  fixConstraints();
+}

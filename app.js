@@ -75,7 +75,7 @@ const startServer = async () => {
       console.log('🔧 Ejecutando corrección de restricciones en producción...');
       try {
         // Importar y ejecutar la función
-        const fixConstraints = require('./fix-constraints');
+        const fixConstraints = require('./fix-constraints.js');
         await fixConstraints();
         console.log('✅ Corrección de restricciones completada');
       } catch (fixError) {
