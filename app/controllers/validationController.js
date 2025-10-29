@@ -219,13 +219,20 @@ class ValidationController {
       }
 
       // Actualizar el registro de validación
-      await ticketValidation.update({
+      const updateData = {
         status: valid ? 'approved' : 'rejected',
         validation_result: req.body,
         reason: reason || (valid ? 'Ticket válido' : 'Ticket no válido'),
         confidence: confidence || 0,
         n8n_response_received: true
-      });
+      };
+
+      // Si es rechazado, agregar fecha de rechazo para métricas
+      if (!valid) {
+        updateData.rejection_date = new Date().toISOString().split('T')[0]; // Solo fecha YYYY-MM-DD
+      }
+
+      await ticketValidation.update(updateData);
 
       console.log(`✅ Validación actualizada - Status: ${valid ? 'approved' : 'rejected'}, Correlation ID: ${correlation_id}`);
       console.log(`📅 Tiempo de expiración: ${ticketValidation.expires_at}`);

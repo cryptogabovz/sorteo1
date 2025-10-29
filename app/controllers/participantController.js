@@ -1,10 +1,52 @@
 const { Participant, TicketValidation } = require('../models');
+const axios = require('axios');
+const config = require('../config/env');
 
 class ParticipantController {
+  // Verificar reCAPTCHA
+  async verifyRecaptcha(token) {
+    try {
+      if (!config.recaptcha.secretKey) {
+        console.log('⚠️ reCAPTCHA no configurado, omitiendo verificación');
+        return { success: true };
+      }
+
+      const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+        params: {
+          secret: config.recaptcha.secretKey,
+          response: token
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error verificando reCAPTCHA:', error);
+      return { success: false, error: 'Error interno de verificación' };
+    }
+  }
+
   // Registrar nuevo participante
   async register(req, res) {
     try {
-      const { name, lastName, cedula, phone, province, termsAccepted } = req.body;
+      const { name, lastName, cedula, phone, province, termsAccepted, 'g-recaptcha-response': recaptchaToken } = req.body;
+
+      // Verificar reCAPTCHA si está configurado
+      if (config.recaptcha.secretKey && config.recaptcha.siteKey) {
+        if (!recaptchaToken) {
+          return res.status(400).json({
+            success: false,
+            message: 'Por favor, complete la verificación de reCAPTCHA'
+          });
+        }
+
+        const recaptchaResult = await this.verifyRecaptcha(recaptchaToken);
+        if (!recaptchaResult.success) {
+          return res.status(400).json({
+            success: false,
+            message: 'Verificación de reCAPTCHA fallida. Intente nuevamente.'
+          });
+        }
+      }
 
       // Validar aceptación de términos y condiciones
       if (!termsAccepted || termsAccepted !== 'on') {

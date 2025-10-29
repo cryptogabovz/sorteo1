@@ -10,6 +10,10 @@ const config = {
   n8nWebhookPass: process.env.N8N_WEBHOOK_PASS,
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+  recaptcha: {
+    siteKey: process.env.RECAPTCHA_SITE_KEY,
+    secretKey: process.env.RECAPTCHA_SECRET_KEY
+  },
   database: {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 5432,

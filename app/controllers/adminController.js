@@ -214,12 +214,9 @@ class AdminController {
       // Obtener estadísticas
       const stats = await Participant.getStats();
 
-      // Obtener participantes recientes (últimos 10)
-      const recentParticipants = await Participant.findAll({
-        order: [['created_at', 'DESC']],
-        limit: 10,
-        attributes: ['id', 'ticket_number', 'name', 'last_name', 'province', 'ticket_validated', 'created_at']
-      });
+      // Obtener métricas diarias (últimos 7 días por defecto)
+      const { TicketValidation } = require('../models');
+      const dailyMetrics = await TicketValidation.getDailyMetrics(7);
 
       // Información del webhook de respuesta (donde n8n debe enviar la respuesta)
       const config = require('../config/env');
@@ -245,7 +242,7 @@ class AdminController {
         title: 'Dashboard Administrador',
         adminUsername: req.session.adminUsername,
         stats,
-        recentParticipants,
+        dailyMetrics,
         webhookInfo
       });
 
@@ -265,7 +262,7 @@ class AdminController {
         title: 'Dashboard Administrador',
         adminUsername: req.session.adminUsername || 'Admin',
         stats: defaultStats,
-        recentParticipants: [],
+        dailyMetrics: [],
         webhookInfo: null,
         error: 'Error cargando datos del dashboard'
       });
@@ -421,6 +418,27 @@ class AdminController {
       res.status(500).json({
         success: false,
         message: 'Error obteniendo métricas'
+      });
+    }
+  }
+
+  // Obtener métricas diarias para el gráfico
+  async getDailyMetrics(req, res) {
+    try {
+      const days = parseInt(req.query.days) || 7;
+      const { TicketValidation } = require('../models');
+      const dailyMetrics = await TicketValidation.getDailyMetrics(days);
+
+      res.json({
+        success: true,
+        data: dailyMetrics
+      });
+
+    } catch (error) {
+      console.error('Error obteniendo métricas diarias:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error obteniendo métricas diarias'
       });
     }
   }

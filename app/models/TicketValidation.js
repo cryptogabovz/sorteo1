@@ -49,6 +49,12 @@ const TicketValidation = sequelize.define('TicketValidation', {
     type: DataTypes.DATE,
     allowNull: false,
     comment: 'Fecha de expiración de la validación pendiente'
+  },
+  // Nuevo campo para métricas de tickets rechazados
+  rejection_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    comment: 'Fecha de rechazo (solo para tickets rechazados)'
   }
 }, {
   tableName: 'ticket_validations',
@@ -66,6 +72,9 @@ const TicketValidation = sequelize.define('TicketValidation', {
     },
     {
       fields: ['n8n_response_received']
+    },
+    {
+      fields: ['rejection_date']
     }
   ]
 });
@@ -96,6 +105,34 @@ TicketValidation.findByCorrelationId = async function(correlationId) {
   return await this.findOne({
     where: { correlation_id: correlationId }
   });
+};
+
+// Método para obtener métricas diarias de validaciones
+TicketValidation.getDailyMetrics = async function(days = 7) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const [results] = await sequelize.query(`
+      SELECT
+        DATE(rejection_date) as date,
+        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
+        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count,
+        COUNT(*) as total_count
+      FROM ticket_validations
+      WHERE rejection_date >= ?
+        AND status IN ('approved', 'rejected')
+      GROUP BY DATE(rejection_date)
+      ORDER BY DATE(rejection_date) DESC
+    `, {
+      replacements: [startDate.toISOString().split('T')[0]]
+    });
+
+    return results;
+  } catch (error) {
+    console.error('Error obteniendo métricas diarias:', error);
+    return [];
+  }
 };
 
 module.exports = TicketValidation;

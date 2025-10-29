@@ -103,6 +103,13 @@
                                     </div>
                                 </div>
 
+                                <!-- reCAPTCHA -->
+                                <% if (typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey) { %>
+                                    <div class="recaptcha-container mb-4">
+                                        <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+                                    </div>
+                                <% } %>
+
                                 <div class="d-grid">
                                     <button type="submit" id="submitBtn" class="btn btn-success btn-lg">
                                         <span class="spinner-border spinner-border-sm me-2" role="status" style="display: none;"></span>
@@ -169,6 +176,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="/js/register.js"></script>
     <script>
         function showTermsModal() {
