@@ -108,6 +108,14 @@ class ValidationController {
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 60); // Expira en 60 minutos para dar tiempo a n8n
 
+      console.log('💾 Creando registro de validación en BD...');
+      console.log('Datos:', {
+        correlation_id: correlationId,
+        image_path: imagePath,
+        image_filename: req.file.filename,
+        expires_at: expiresAt
+      });
+
       const ticketValidation = await TicketValidation.create({
         correlation_id: correlationId,
         image_path: imagePath,
@@ -131,6 +139,13 @@ class ValidationController {
         file_size: req.file.size,
         upload_timestamp: new Date().toISOString()
       };
+
+      console.log('📋 Payload preparado para n8n:');
+      console.log('- correlation_id:', correlationId);
+      console.log('- filename:', req.file.originalname);
+      console.log('- mimetype:', req.file.mimetype);
+      console.log('- file_size:', req.file.size, 'bytes');
+      console.log('- response_url:', payload.response_url);
 
       console.log(`📤 Enviando imagen a n8n - Correlation ID: ${correlationId}`);
       console.log(`📤 URL n8n: ${config.n8nWebhookUrl}`);
@@ -183,19 +198,29 @@ class ValidationController {
 
     } catch (error) {
       console.error('❌ Error en upload y validación:', error);
+      console.error('Stack trace completo:', error.stack);
 
       // Limpiar archivo si existe
       if (req.file) {
         const fs = require('fs');
         const path = require('path');
         const imagePath = path.join(__dirname, '../../public/uploads', req.file.filename);
+        console.log('🧹 Limpiando archivo:', imagePath);
         if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
+          try {
+            fs.unlinkSync(imagePath);
+            console.log('✅ Archivo limpiado exitosamente');
+          } catch (cleanupError) {
+            console.error('⚠️ Error limpiando archivo:', cleanupError.message);
+          }
+        } else {
+          console.log('⚠️ Archivo no existe para limpiar');
         }
       }
 
-      // Manejar errores similares al método anterior
+      // Manejar errores específicos
       if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        console.log('❌ Error: Servicio n8n no disponible');
         return res.status(503).json({
           success: false,
           message: 'Servicio de validación no disponible. Intente nuevamente.'
@@ -203,12 +228,32 @@ class ValidationController {
       }
 
       if (error.code === 'ECONNABORTED') {
+        console.log('❌ Error: Timeout en conexión con n8n');
         return res.status(504).json({
           success: false,
           message: 'Tiempo de espera agotado. Intente nuevamente.'
         });
       }
 
+      // Error de Sequelize (base de datos)
+      if (error.name && error.name.includes('Sequelize')) {
+        console.log('❌ Error de base de datos:', error.name);
+        return res.status(500).json({
+          success: false,
+          message: 'Error de base de datos. Contacte al administrador.'
+        });
+      }
+
+      // Error de archivo
+      if (error.code === 'ENOENT') {
+        console.log('❌ Error: Archivo no encontrado');
+        return res.status(500).json({
+          success: false,
+          message: 'Error procesando el archivo. Intente nuevamente.'
+        });
+      }
+
+      console.log('❌ Error desconocido procesando imagen');
       res.status(500).json({
         success: false,
         message: 'Error procesando la imagen'
