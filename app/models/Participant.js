@@ -75,6 +75,9 @@ const Participant = sequelize.define('participants', {
       fields: ['ticket_number']
     },
     {
+      fields: ['cedula'] // Permitir múltiples registros con misma cédula
+    },
+    {
       fields: ['province']
     },
     {
