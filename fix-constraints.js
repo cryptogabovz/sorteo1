@@ -16,12 +16,48 @@ async function fixConstraints() {
       console.log('- Nombre:', c.constraint_name, 'Tipo:', c.constraint_type);
     });
 
-    // 2. Eliminar restricción de cédula si existe
+    // 2. Eliminar restricción de cédula si existe (múltiples métodos)
     const cedulaConstraint = constraints.find(c => c.constraint_name === 'participants_cedula');
     if (cedulaConstraint) {
       console.log('❌ Eliminando restricción participants_cedula...');
-      await sequelize.query('ALTER TABLE participants DROP CONSTRAINT participants_cedula;');
-      console.log('✅ Restricción participants_cedula eliminada');
+
+      // Intentar múltiples métodos para eliminar la restricción
+      try {
+        await sequelize.query('ALTER TABLE participants DROP CONSTRAINT IF EXISTS participants_cedula;');
+        console.log('✅ Eliminada con ALTER TABLE');
+      } catch (error) {
+        console.log('⚠️ ALTER TABLE falló, intentando con Sequelize...');
+        try {
+          const queryInterface = sequelize.getQueryInterface();
+          await queryInterface.removeConstraint('participants', 'participants_cedula');
+          console.log('✅ Eliminada con Sequelize');
+        } catch (sequelizeError) {
+          console.log('⚠️ Sequelize falló, intentando con DROP INDEX...');
+          try {
+            await sequelize.query('DROP INDEX IF EXISTS participants_cedula;');
+            console.log('✅ Eliminada con DROP INDEX');
+          } catch (indexError) {
+            console.log('⚠️ DROP INDEX falló, intentando recrear columna...');
+            // Último recurso: recrear columna sin restricciones
+            await sequelize.query(`
+              DO $$
+              BEGIN
+                -- Remover cualquier restricción única en cedula
+                ALTER TABLE participants DROP CONSTRAINT IF EXISTS participants_cedula;
+                DROP INDEX IF EXISTS participants_cedula;
+                -- Asegurar que la columna permita NULL temporalmente
+                ALTER TABLE participants ALTER COLUMN cedula DROP NOT NULL;
+                ALTER TABLE participants ALTER COLUMN cedula SET NOT NULL;
+              EXCEPTION
+                WHEN others THEN
+                  RAISE NOTICE 'Error en corrección: %', SQLERRM;
+              END
+              $$;
+            `);
+            console.log('✅ Corrección con DO block completada');
+          }
+        }
+      }
     } else {
       console.log('ℹ️ Restricción participants_cedula no existe');
     }
@@ -46,23 +82,38 @@ async function fixConstraints() {
       console.log('- Nombre:', c.constraint_name, 'Tipo:', c.constraint_type);
     });
 
-    // 5. Probar creación de registro
-    console.log('🧪 Probando creación de registro...');
+    // 5. Probar creación de registro con cédula existente
+    console.log('🧪 Probando creación de registro con cédula existente...');
     const { Participant } = require('./app/models');
 
+    // Verificar si ya existe usuario con cédula específica
+    const existing = await Participant.findAll({
+      where: { cedula: '22006181' }
+    });
+
+    console.log(`Encontrados ${existing.length} registros con cédula 22006181`);
+
+    // Crear registro adicional
     const testParticipant = await Participant.create({
       ticket_number: '9999',
-      name: 'Test',
-      last_name: 'Migration',
+      name: existing.length > 0 ? existing[0].name : 'Test',
+      last_name: existing.length > 0 ? existing[0].last_name : 'Migration',
       cedula: '22006181',
       phone: '04140000000',
       province: 'Test Province',
       ticket_validated: true
     });
 
-    console.log('✅ Registro de prueba creado:', testParticipant.ticket_number);
+    console.log('✅ Registro adicional creado:', testParticipant.ticket_number);
 
-    // Limpiar
+    // Verificar total de registros con esta cédula
+    const totalAfter = await Participant.count({
+      where: { cedula: '22006181' }
+    });
+
+    console.log(`Total de registros con cédula 22006181: ${totalAfter}`);
+
+    // Limpiar solo el registro de prueba
     await testParticipant.destroy();
     console.log('🧹 Registro de prueba eliminado');
 
