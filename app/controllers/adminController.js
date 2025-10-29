@@ -215,7 +215,6 @@ class AdminController {
       const stats = await Participant.getStats();
 
       // Obtener métricas diarias de participantes (últimos 7 días por defecto)
-      const { Participant } = require('../models');
       const dailyMetrics = await Participant.getDailyParticipantsMetrics(7);
 
       // Información del webhook de respuesta (donde n8n debe enviar la respuesta)
@@ -426,7 +425,6 @@ class AdminController {
   async getDailyMetrics(req, res) {
     try {
       const days = parseInt(req.query.days) || 7;
-      const { Participant } = require('../models');
       const dailyMetrics = await Participant.getDailyParticipantsMetrics(days);
 
       res.json({
