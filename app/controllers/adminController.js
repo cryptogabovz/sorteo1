@@ -520,47 +520,92 @@ class AdminController {
             adminUsername: req.session.adminUsername
           });
         } else {
-          // Vista individual por ID numérico (por compatibilidad)
-          const participantId = parseInt(id);
-          if (isNaN(participantId)) {
-            console.log(`❌ ID inválido: ${id}`);
-            return res.render('admin/participants', {
-              title: 'ID inválido',
-              error: 'ID de participante inválido',
-              participants: [],
-              provinces: [],
-              currentPage: 1,
-              totalPages: 1,
-              totalCount: 0,
-              filters: {}
+          // Verificar si es un UUID válido
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (uuidRegex.test(id)) {
+            console.log(`🔍 Buscando por UUID: ${id}`);
+
+            // Buscar participante por UUID
+            const participant = await Participant.findByPk(id);
+
+            if (!participant) {
+              console.log(`❌ Participante con UUID ${id} no encontrado`);
+              return res.render('admin/participants', {
+                title: 'Participante no encontrado',
+                error: 'Participante no encontrado',
+                participants: [],
+                provinces: [],
+                currentPage: 1,
+                totalPages: 1,
+                totalCount: 0,
+                filters: {}
+              });
+            }
+
+            console.log(`✅ Participante encontrado por UUID: ${participant.name} ${participant.last_name}`);
+
+            // Buscar todos los tickets de esta cédula para mostrar el historial completo
+            const allTickets = await Participant.findAll({
+              where: { cedula: participant.cedula },
+              order: [['created_at', 'ASC']]
             });
-          }
 
-          const participant = await Participant.findByPk(participantId);
-
-          if (!participant) {
-            console.log(`❌ Participante con ID ${participantId} no encontrado`);
-            return res.render('admin/participants', {
-              title: 'Participante no encontrado',
-              error: 'Participante no encontrado',
-              participants: [],
-              provinces: [],
-              currentPage: 1,
-              totalPages: 1,
-              totalCount: 0,
-              filters: {}
+            res.render('admin/participant-detail', {
+              title: `Detalle - ${participant.name} ${participant.last_name}`,
+              participant,
+              allTickets, // Todos los tickets de esta persona
+              adminUsername: req.session.adminUsername
             });
+          } else {
+            // Buscar por cédula si el ID parece ser una cédula (solo números)
+            if (/^\d+$/.test(id)) {
+              console.log(`🔍 Buscando por cédula: ${id}`);
+
+              // Buscar todos los participantes con esta cédula
+              const participants = await Participant.findAll({
+                where: { cedula: id },
+                order: [['created_at', 'ASC']]
+              });
+
+              if (!participants || participants.length === 0) {
+                console.log(`❌ No se encontraron participantes con cédula: ${id}`);
+                return res.render('admin/participants', {
+                  title: 'Participante no encontrado',
+                  error: 'Participante no encontrado',
+                  participants: [],
+                  provinces: [],
+                  currentPage: 1,
+                  totalPages: 1,
+                  totalCount: 0,
+                  filters: {}
+                });
+              }
+
+              // Usar el primer participante para información básica
+              const mainParticipant = participants[0];
+
+              console.log(`✅ Encontrados ${participants.length} tickets para cédula ${id}: ${mainParticipant.name} ${mainParticipant.last_name}`);
+
+              res.render('admin/participant-detail', {
+                title: `Detalle - ${mainParticipant.name} ${mainParticipant.last_name}`,
+                participant: mainParticipant,
+                allTickets: participants, // Todos los tickets de esta persona
+                adminUsername: req.session.adminUsername
+              });
+            } else {
+              console.log(`❌ ID inválido: ${id} (no es UUID ni cédula)`);
+              return res.render('admin/participants', {
+                title: 'ID inválido',
+                error: 'ID de participante inválido',
+                participants: [],
+                provinces: [],
+                currentPage: 1,
+                totalPages: 1,
+                totalCount: 0,
+                filters: {}
+              });
+            }
           }
-
-          console.log(`✅ Participante encontrado: ${participant.name} ${participant.last_name}`);
-          console.log(`📸 URL de imagen: ${participant.ticket_image_url}`);
-
-          res.render('admin/participant-detail', {
-            title: `Detalle - ${participant.name} ${participant.last_name}`,
-            participant,
-            allTickets: [participant], // Solo este ticket
-            adminUsername: req.session.adminUsername
-          });
         }
       }
 
