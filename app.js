@@ -53,6 +53,17 @@ app.use((req, res) => {
 // Función para iniciar servidor
 const startServer = async () => {
   try {
+    // Ejecutar corrección de restricciones si es necesario
+    if (process.env.RUN_FIX_CONSTRAINTS === 'true') {
+      console.log('🔧 Ejecutando corrección de restricciones...');
+      try {
+        await require('./fix-constraints')();
+        console.log('✅ Corrección de restricciones completada');
+      } catch (fixError) {
+        console.error('❌ Error en corrección de restricciones:', fixError.message);
+      }
+    }
+
     // Sincronizar base de datos
     await syncDatabase();
 
