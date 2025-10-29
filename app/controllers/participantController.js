@@ -287,11 +287,11 @@ class ParticipantController {
           // Crear participante con cédula duplicada (permitido)
           const participant = await Participant.create({
             ticket_number: ticketNumber,
-            name: name?.trim().replace(/[<>\"'&]/g, ''),
-            last_name: lastName?.trim().replace(/[<>\"'&]/g, ''),
-            cedula: cedula?.trim().replace(/[^0-9]/g, ''), // Permitir duplicado
-            phone: phone?.trim().replace(/[^0-9+\-\s]/g, ''),
-            province: province?.trim(),
+            name: req.body.name?.trim().replace(/[<>\"'&]/g, ''),
+            last_name: req.body.lastName?.trim().replace(/[<>\"'&]/g, ''),
+            cedula: req.body.cedula?.trim().replace(/[^0-9]/g, ''), // Permitir duplicado
+            phone: req.body.phone?.trim().replace(/[^0-9+\-\s]/g, ''),
+            province: req.body.province?.trim(),
             ticket_validated: true,
             ticket_image_url: validationResult.ticketImageUrl || null
           });
