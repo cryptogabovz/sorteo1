@@ -281,33 +281,41 @@ class ParticipantController {
         if (error.fields && error.fields.cedula) {
           console.log('✅ Permitido: Múltiples participaciones con misma cédula');
 
-          // Obtener próximo número de ticket
-          const ticketNumber = await Participant.getNextTicketNumber();
+          try {
+            // Obtener próximo número de ticket
+            const ticketNumber = await Participant.getNextTicketNumber();
 
-          // Crear participante con cédula duplicada (permitido)
-          const participant = await Participant.create({
-            ticket_number: ticketNumber,
-            name: req.body.name?.trim().replace(/[<>\"'&]/g, ''),
-            last_name: req.body.lastName?.trim().replace(/[<>\"'&]/g, ''),
-            cedula: req.body.cedula?.trim().replace(/[^0-9]/g, ''), // Permitir duplicado
-            phone: req.body.phone?.trim().replace(/[^0-9+\-\s]/g, ''),
-            province: req.body.province?.trim(),
-            ticket_validated: true,
-            ticket_image_url: req.session.validationResult.ticketImageUrl || null
-          });
+            // Crear participante con cédula duplicada (permitido)
+            const participant = await Participant.create({
+              ticket_number: ticketNumber,
+              name: req.body.name?.trim().replace(/[<>\"'&]/g, ''),
+              last_name: req.body.lastName?.trim().replace(/[<>\"'&]/g, ''),
+              cedula: req.body.cedula?.trim().replace(/[^0-9]/g, ''), // Permitir duplicado
+              phone: req.body.phone?.trim().replace(/[^0-9+\-\s]/g, ''),
+              province: req.body.province?.trim(),
+              ticket_validated: true,
+              ticket_image_url: req.session.validationResult.ticketImageUrl || null
+            });
 
-          // Limpiar sesión
-          delete req.session.validationResult;
+            // Limpiar sesión
+            delete req.session.validationResult;
 
-          return res.json({
-            success: true,
-            message: 'Participante registrado exitosamente (participación adicional)',
-            data: {
-              ticketNumber: participant.ticket_number,
-              name: participant.name,
-              lastName: participant.last_name
-            }
-          });
+            return res.json({
+              success: true,
+              message: 'Participante registrado exitosamente (participación adicional)',
+              data: {
+                ticketNumber: participant.ticket_number,
+                name: participant.name,
+                lastName: participant.last_name
+              }
+            });
+          } catch (createError) {
+            console.error('❌ Error creando participante con cédula duplicada:', createError);
+            return res.status(500).json({
+              success: false,
+              message: 'Error interno del servidor al crear participación adicional'
+            });
+          }
         } else {
           // Para otros campos únicos, devolver error
           return res.status(400).json({
