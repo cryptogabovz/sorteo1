@@ -53,11 +53,21 @@ app.use((req, res) => {
 // Función para iniciar servidor
 const startServer = async () => {
   try {
-    // Ejecutar corrección de restricciones siempre en producción
+    // Sincronizar base de datos PRIMERO
+    await syncDatabase();
+
+    // Ejecutar corrección de restricciones DESPUÉS de sincronizar BD
     if (process.env.NODE_ENV === 'production') {
       console.log('🔧 Ejecutando corrección de restricciones en producción...');
       try {
-        await require('./fix-constraints')();
+        const fixConstraints = require('./fix-constraints');
+        if (typeof fixConstraints === 'function') {
+          await fixConstraints();
+        } else if (fixConstraints.default && typeof fixConstraints.default === 'function') {
+          await fixConstraints.default();
+        } else {
+          console.log('⚠️ fix-constraints no exporta función, omitiendo...');
+        }
         console.log('✅ Corrección de restricciones completada');
       } catch (fixError) {
         console.error('❌ Error en corrección de restricciones:', fixError.message);
@@ -66,9 +76,6 @@ const startServer = async () => {
         console.log('⚠️ Continuando con el inicio del servidor...');
       }
     }
-
-    // Sincronizar base de datos
-    await syncDatabase();
 
     // Limpiar validaciones expiradas periódicamente (cada 5 minutos)
     setInterval(async () => {

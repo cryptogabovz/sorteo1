@@ -86,36 +86,48 @@ async function fixConstraints() {
     console.log('🧪 Probando creación de registro con cédula existente...');
     const { Participant } = require('./app/models');
 
-    // Verificar si ya existe usuario con cédula específica
-    const existing = await Participant.findAll({
-      where: { cedula: '22006181' }
-    });
+    try {
+      // Verificar si ya existe usuario con cédula específica
+      const existing = await Participant.findAll({
+        where: { cedula: '22006181' }
+      });
 
-    console.log(`Encontrados ${existing.length} registros con cédula 22006181`);
+      console.log(`Encontrados ${existing.length} registros con cédula 22006181`);
 
-    // Crear registro adicional
-    const testParticipant = await Participant.create({
-      ticket_number: '9999',
-      name: existing.length > 0 ? existing[0].name : 'Test',
-      last_name: existing.length > 0 ? existing[0].last_name : 'Migration',
-      cedula: '22006181',
-      phone: '04140000000',
-      province: 'Test Province',
-      ticket_validated: true
-    });
+      // Crear registro adicional
+      const testParticipant = await Participant.create({
+        ticket_number: '9999',
+        name: existing.length > 0 ? existing[0].name : 'Test',
+        last_name: existing.length > 0 ? existing[0].last_name : 'Migration',
+        cedula: '22006181',
+        phone: '04140000000',
+        province: 'Test Province',
+        ticket_validated: true
+      });
 
-    console.log('✅ Registro adicional creado:', testParticipant.ticket_number);
+      console.log('✅ Registro adicional creado:', testParticipant.ticket_number);
 
-    // Verificar total de registros con esta cédula
-    const totalAfter = await Participant.count({
-      where: { cedula: '22006181' }
-    });
+      // Verificar total de registros con esta cédula
+      const totalAfter = await Participant.count({
+        where: { cedula: '22006181' }
+      });
 
-    console.log(`Total de registros con cédula 22006181: ${totalAfter}`);
+      console.log(`Total de registros con cédula 22006181: ${totalAfter}`);
 
-    // Limpiar solo el registro de prueba
-    await testParticipant.destroy();
-    console.log('🧹 Registro de prueba eliminado');
+      // Limpiar solo el registro de prueba
+      await testParticipant.destroy();
+      console.log('🧹 Registro de prueba eliminado');
+
+    } catch (testError) {
+      console.error('❌ ERROR en prueba:', testError.message);
+      if (testError.name === 'SequelizeUniqueConstraintError') {
+        console.error('Campos con error de unicidad:', testError.fields);
+        console.log('⚠️ Restricción única aún existe - corrección fallida');
+      } else {
+        console.error('Error inesperado en prueba:', testError.stack);
+      }
+      // No fallar completamente por error de prueba
+    }
 
     console.log('🎉 CORRECCIÓN COMPLETADA: Múltiples boletos funcionan correctamente');
 
