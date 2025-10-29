@@ -47,8 +47,23 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
 
         try {
+            // Ejecutar reCAPTCHA v3 si está disponible
+            let recaptchaToken = null;
+            if (typeof grecaptcha !== 'undefined') {
+                console.log('🔒 Ejecutando reCAPTCHA v3...');
+                recaptchaToken = await grecaptcha.execute('<%= typeof recaptcha !== "undefined" ? recaptcha.siteKey : "" %>', { action: 'register' });
+                console.log('✅ Token reCAPTCHA obtenido:', recaptchaToken ? recaptchaToken.substring(0, 20) + '...' : 'null');
+            }
+
             const formData = new FormData(registerForm);
             const data = Object.fromEntries(formData.entries());
+
+            // Agregar token de reCAPTCHA si existe
+            if (recaptchaToken) {
+                data['g-recaptcha-response'] = recaptchaToken;
+            }
+
+            console.log('📤 Enviando datos de registro...');
 
             const response = await fetch('/api/register', {
                 method: 'POST',
@@ -59,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const result = await response.json();
+            console.log('📥 Respuesta del servidor:', result);
 
             if (result.success) {
                 // Registro exitoso, redirigir a página de éxito
@@ -73,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error('❌ Error en handleSubmit:', error);
             showMessage('Error de conexión. Inténtalo nuevamente.', 'danger');
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Registrarme y Obtener Número';
