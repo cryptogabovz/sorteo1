@@ -94,8 +94,7 @@
                                 <canvas id="dailyChart" width="400" height="200"></canvas>
                                 <div class="mt-3 text-center">
                                     <small class="text-muted">
-                                        <span class="text-success">● Verde:</span> Tickets validados
-                                        <span class="text-danger ms-3">● Rojo:</span> Tickets rechazados
+                                        Gráfico de participantes registrados por día
                                     </small>
                                 </div>
                             </div>
@@ -128,12 +127,15 @@
 
             // Preparar datos
             const labels = data.map(item => {
-                const date = new Date(item.date);
-                return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                const date = new Date(item.date + 'T00:00:00');
+                return date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit'
+                });
             });
 
-            const approvedData = data.map(item => item.approved_count);
-            const rejectedData = data.map(item => item.rejected_count);
+            const participantsData = data.map(item => item.participants_count);
 
             // Destruir gráfico anterior si existe
             if (window.dailyChart) {
@@ -145,16 +147,10 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Tickets Validados',
-                        data: approvedData,
-                        backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                        borderColor: 'rgba(40, 167, 69, 1)',
-                        borderWidth: 1
-                    }, {
-                        label: 'Tickets Rechazados',
-                        data: rejectedData,
-                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                        borderColor: 'rgba(220, 53, 69, 1)',
+                        label: 'Participantes Registrados',
+                        data: participantsData,
+                        backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                        borderColor: 'rgba(0, 123, 255, 1)',
                         borderWidth: 1
                     }]
                 },
@@ -163,18 +159,16 @@
                     maintainAspectRatio: false,
                     scales: {
                         x: {
-                            stacked: true,
                             title: {
                                 display: true,
                                 text: 'Fecha'
                             }
                         },
                         y: {
-                            stacked: true,
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Cantidad de Tickets'
+                                text: 'Cantidad de Participantes'
                             },
                             ticks: {
                                 stepSize: 1
@@ -189,7 +183,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y;
+                                    return 'Participantes: ' + context.parsed.y;
                                 }
                             }
                         }

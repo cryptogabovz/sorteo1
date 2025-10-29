@@ -214,9 +214,9 @@ class AdminController {
       // Obtener estadísticas
       const stats = await Participant.getStats();
 
-      // Obtener métricas diarias (últimos 7 días por defecto)
+      // Obtener métricas diarias de participantes (últimos 7 días por defecto)
       const { TicketValidation } = require('../models');
-      const dailyMetrics = await TicketValidation.getDailyMetrics(7);
+      const dailyMetrics = await TicketValidation.getDailyParticipantsMetrics(7);
 
       // Información del webhook de respuesta (donde n8n debe enviar la respuesta)
       const config = require('../config/env');
@@ -422,12 +422,12 @@ class AdminController {
     }
   }
 
-  // Obtener métricas diarias para el gráfico
+  // Obtener métricas diarias de participantes para el gráfico
   async getDailyMetrics(req, res) {
     try {
       const days = parseInt(req.query.days) || 7;
       const { TicketValidation } = require('../models');
-      const dailyMetrics = await TicketValidation.getDailyMetrics(days);
+      const dailyMetrics = await TicketValidation.getDailyParticipantsMetrics(days);
 
       res.json({
         success: true,
@@ -435,10 +435,10 @@ class AdminController {
       });
 
     } catch (error) {
-      console.error('Error obteniendo métricas diarias:', error);
+      console.error('Error obteniendo métricas diarias de participantes:', error);
       res.status(500).json({
         success: false,
-        message: 'Error obteniendo métricas diarias'
+        message: 'Error obteniendo métricas diarias de participantes'
       });
     }
   }

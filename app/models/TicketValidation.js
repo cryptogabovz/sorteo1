@@ -107,34 +107,27 @@ TicketValidation.findByCorrelationId = async function(correlationId) {
   });
 };
 
-// Método para obtener métricas diarias de validaciones
-TicketValidation.getDailyMetrics = async function(days = 7) {
+// Método para obtener métricas diarias de participantes (no validaciones)
+TicketValidation.getDailyParticipantsMetrics = async function(days = 7) {
   try {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Para approved usamos created_at, para rejected usamos rejection_date
     const [results] = await sequelize.query(`
       SELECT
-        DATE(COALESCE(tv.rejection_date, tv.created_at)) as date,
-        COUNT(CASE WHEN tv.status = 'approved' THEN 1 END) as approved_count,
-        COUNT(CASE WHEN tv.status = 'rejected' THEN 1 END) as rejected_count,
-        COUNT(*) as total_count
-      FROM ticket_validations tv
-      WHERE (tv.status = 'approved' AND tv.created_at >= ?)
-         OR (tv.status = 'rejected' AND tv.rejection_date >= ?)
-      GROUP BY DATE(COALESCE(tv.rejection_date, tv.created_at))
-      ORDER BY DATE(COALESCE(tv.rejection_date, tv.created_at)) DESC
+        DATE(p.created_at) as date,
+        COUNT(*) as participants_count
+      FROM participants p
+      WHERE p.created_at >= ?
+      GROUP BY DATE(p.created_at)
+      ORDER BY DATE(p.created_at) DESC
     `, {
-      replacements: [
-        startDate.toISOString().split('T')[0], // Para approved
-        startDate.toISOString().split('T')[0]  // Para rejected
-      ]
+      replacements: [startDate.toISOString().split('T')[0]]
     });
 
     return results;
   } catch (error) {
-    console.error('Error obteniendo métricas diarias:', error);
+    console.error('Error obteniendo métricas diarias de participantes:', error);
     return [];
   }
 };
