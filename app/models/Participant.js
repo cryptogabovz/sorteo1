@@ -9,10 +9,10 @@ const Participant = sequelize.define('participants', {
   },
   ticket_number: {
     type: DataTypes.STRING(10),
-    allowNull: false,
+    allowNull: true, // Permitir null para tickets eliminados
     unique: true,
     validate: {
-      is: /^\d{4}$/ // Formato 0001, 0002, etc.
+      is: /^\d{4}$/ // Formato 0001, 0002, etc. (solo cuando no es null)
     }
   },
   name: {
