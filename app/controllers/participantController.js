@@ -233,95 +233,42 @@ class ParticipantController {
       // Obtener próximo número de ticket
       const ticketNumber = await Participant.getNextTicketNumber();
 
-      // Intentar crear participante directamente (ahora sin restricción de unicidad)
-      try {
-        const participant = await Participant.create({
-          ticket_number: ticketNumber,
-          name: sanitizedData.name,
-          last_name: sanitizedData.lastName,
-          cedula: sanitizedData.cedula,
-          phone: sanitizedData.phone,
-          province: sanitizedData.province,
-          ticket_validated: true,
-          ticket_image_url: validationResult.ticketImageUrl || null
-        });
+      // Verificar si ya existe un participante con esta cédula
+      const existingCount = await Participant.count({
+        where: { cedula: sanitizedData.cedula }
+      });
 
-        // Limpiar sesión
-        delete req.session.validationResult;
- 
-        // Verificar si ya existe un participante con esta cédula para determinar el mensaje
-        const existingParticipants = await Participant.findAll({
-          where: { cedula: sanitizedData.cedula },
-          order: [['created_at', 'DESC']],
-          limit: 2
-        });
- 
-        const isAdditionalParticipation = existingParticipants.length > 1;
-        const message = isAdditionalParticipation
-          ? 'Participante registrado exitosamente (participación adicional)'
-          : 'Participante registrado exitosamente';
- 
-        res.json({
-          success: true,
-          message: message,
-          data: {
-            ticketNumber: participant.ticket_number,
-            name: participant.name,
-            lastName: participant.last_name,
-            isAdditionalParticipation: isAdditionalParticipation
-          }
-        });
-      } catch (createError) {
-        console.error('❌ Error creando participante:', createError);
+      const isAdditionalParticipation = existingCount > 0;
 
-        // Si aún hay error de unicidad (por si la migración no se aplicó), intentar manejo especial
-        if (createError.name === 'SequelizeUniqueConstraintError' && createError.fields?.cedula) {
-          console.log('⚠️ Error de unicidad detectado - intentando crear participación adicional');
+      // Crear participante (ahora sin restricción de unicidad)
+      const participant = await Participant.create({
+        ticket_number: ticketNumber,
+        name: sanitizedData.name,
+        last_name: sanitizedData.lastName,
+        cedula: sanitizedData.cedula,
+        phone: sanitizedData.phone,
+        province: sanitizedData.province,
+        ticket_validated: true,
+        ticket_image_url: validationResult.ticketImageUrl || null
+      });
 
-          try {
-            // Obtener próximo número de ticket
-            const ticketNumber = await Participant.getNextTicketNumber();
+      // Limpiar sesión
+      delete req.session.validationResult;
 
-            // Crear participante con cédula duplicada (permitido)
-            const participant = await Participant.create({
-              ticket_number: ticketNumber,
-              name: sanitizedData.name,
-              last_name: sanitizedData.lastName,
-              cedula: sanitizedData.cedula, // Permitir duplicado
-              phone: sanitizedData.phone,
-              province: sanitizedData.province,
-              ticket_validated: true,
-              ticket_image_url: validationResult.ticketImageUrl || null
-            });
+      const message = isAdditionalParticipation
+        ? 'Participante registrado exitosamente (participación adicional)'
+        : 'Participante registrado exitosamente';
 
-            // Limpiar sesión
-            delete req.session.validationResult;
-
-            return res.json({
-              success: true,
-              message: 'Participante registrado exitosamente (participación adicional)',
-              data: {
-                ticketNumber: participant.ticket_number,
-                name: participant.name,
-                lastName: participant.last_name,
-                isAdditionalParticipation: true
-              }
-            });
-          } catch (retryError) {
-            console.error('❌ Error en reintento de creación:', retryError);
-            return res.status(500).json({
-              success: false,
-              message: 'Error interno del servidor al crear participación adicional'
-            });
-          }
-        } else {
-          // Otro tipo de error, devolver mensaje genérico
-          return res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-          });
+      res.json({
+        success: true,
+        message: message,
+        data: {
+          ticketNumber: participant.ticket_number,
+          name: participant.name,
+          lastName: participant.last_name,
+          isAdditionalParticipation: isAdditionalParticipation
         }
-      }
+      });
 
       // Limpiar sesión
       delete req.session.validationResult;
