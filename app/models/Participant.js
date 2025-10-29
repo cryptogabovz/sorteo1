@@ -118,4 +118,29 @@ Participant.getStats = async function() {
   return results[0];
 };
 
+// Método para obtener métricas diarias de participantes
+Participant.getDailyParticipantsMetrics = async function(days = 7) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const [results] = await sequelize.query(`
+      SELECT
+        DATE(created_at) as date,
+        COUNT(*) as participants_count
+      FROM participants
+      WHERE created_at >= ?
+      GROUP BY DATE(created_at)
+      ORDER BY DATE(created_at) DESC
+    `, {
+      replacements: [startDate.toISOString().split('T')[0]]
+    });
+
+    return results;
+  } catch (error) {
+    console.error('Error obteniendo métricas diarias de participantes:', error);
+    return [];
+  }
+};
+
 module.exports = Participant;
