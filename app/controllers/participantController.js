@@ -234,26 +234,55 @@ class ParticipantController {
       const ticketNumber = await Participant.getNextTicketNumber();
 
       // Verificar si ya existe un participante con esta cédula
-      const existingCount = await Participant.count({
-        where: { cedula: sanitizedData.cedula }
+      const existingParticipants = await Participant.findAll({
+        where: { cedula: sanitizedData.cedula },
+        order: [['created_at', 'DESC']],
+        limit: 1
       });
 
-      const isAdditionalParticipation = existingCount > 0;
+      const isAdditionalParticipation = existingParticipants.length > 0;
+
+      // Si existe, usar los datos del registro anterior para consistencia
+      let participantData;
+      if (isAdditionalParticipation) {
+        const existingParticipant = existingParticipants[0];
+        console.log(`📝 Usuario existente encontrado - Cédula: ${sanitizedData.cedula}, asignando nuevo boleto`);
+
+        // Usar datos del registro anterior, pero permitir actualizar teléfono si cambió
+        participantData = {
+          ticket_number: ticketNumber,
+          name: existingParticipant.name, // Mantener nombre original
+          last_name: existingParticipant.last_name, // Mantener apellido original
+          cedula: sanitizedData.cedula,
+          phone: sanitizedData.phone || existingParticipant.phone, // Usar nuevo teléfono si proporcionado
+          province: sanitizedData.province || existingParticipant.province, // Usar nueva provincia si proporcionada
+          ticket_validated: true,
+          ticket_image_url: validationResult.ticketImageUrl || null
+        };
+      } else {
+        // Nuevo participante
+        participantData = {
+          ticket_number: ticketNumber,
+          name: sanitizedData.name,
+          last_name: sanitizedData.lastName,
+          cedula: sanitizedData.cedula,
+          phone: sanitizedData.phone,
+          province: sanitizedData.province,
+          ticket_validated: true,
+          ticket_image_url: validationResult.ticketImageUrl || null
+        };
+      }
 
       // Crear participante (cada registro es un boleto separado)
-      const participant = await Participant.create({
-        ticket_number: ticketNumber,
-        name: sanitizedData.name,
-        last_name: sanitizedData.lastName,
-        cedula: sanitizedData.cedula,
-        phone: sanitizedData.phone,
-        province: sanitizedData.province,
-        ticket_validated: true,
-        ticket_image_url: validationResult.ticketImageUrl || null
-      });
+      const participant = await Participant.create(participantData);
 
       // Limpiar sesión
       delete req.session.validationResult;
+
+      // Contar total de boletos para este usuario
+      const totalTicketsForUser = await Participant.count({
+        where: { cedula: sanitizedData.cedula }
+      });
 
       const message = isAdditionalParticipation
         ? 'Boleto adicional registrado exitosamente'
@@ -267,7 +296,7 @@ class ParticipantController {
           name: participant.name,
           lastName: participant.last_name,
           isAdditionalParticipation: isAdditionalParticipation,
-          totalTicketsForUser: existingCount + 1
+          totalTicketsForUser: totalTicketsForUser
         }
       });
 
@@ -306,11 +335,11 @@ class ParticipantController {
         }
 
         // Para cualquier otro campo único, devolver error genérico
-        // Esto no debería suceder con cédula ya que no es única
+        // Esto no debería suceder ya que cedula no es única
         console.error('❌ Error inesperado de unicidad:', error.fields);
-        return res.status(400).json({
+        return res.status(500).json({
           success: false,
-          message: 'Error de validación de datos únicos'
+          message: 'Error interno del servidor'
         });
       }
 
