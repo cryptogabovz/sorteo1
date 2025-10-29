@@ -15,7 +15,11 @@ const runPendingMigrations = async () => {
         name: 'remove_cedula_unique',
         check: async () => {
           const constraints = await queryInterface.showConstraint('participants');
-          return !constraints.some(c => c.constraintName === 'participants_cedula_key');
+          // Verificar tanto la restricción nombrada como la automática
+          return !constraints.some(c =>
+            c.constraintName === 'participants_cedula_key' ||
+            c.constraintName === 'participants_cedula'
+          );
         },
         run: async () => {
           const migration = require('./migrations/remove_cedula_unique.js');
