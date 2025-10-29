@@ -75,7 +75,6 @@ const startServer = async () => {
       console.log('🔧 Ejecutando corrección de restricciones en producción...');
       try {
         // Importar y ejecutar la función
-        const { sequelize } = require('./app/config/database');
         const fixConstraints = require('./fix-constraints.js');
 
         // Crear nueva instancia de sequelize para evitar conflictos de conexión

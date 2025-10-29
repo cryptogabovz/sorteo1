@@ -3,6 +3,8 @@ const { sequelize } = require('./app/config/database');
 async function fixConstraints(sequelizeInstance = null) {
   // Usar instancia proporcionada o la global
   const sequelize = sequelizeInstance || require('./app/config/database').sequelize;
+
+  console.log(`🔧 Usando instancia de Sequelize: ${sequelizeInstance ? 'SEPARADA' : 'GLOBAL'}`);
   try {
     console.log('🔧 Aplicando corrección final de restricciones...');
 
