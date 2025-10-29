@@ -3,7 +3,7 @@ const axios = require('axios');
 const config = require('../config/env');
 
 class ParticipantController {
-  // Verificar reCAPTCHA v3
+  // Verificar reCAPTCHA (v2 o v3)
   async verifyRecaptcha(token) {
     try {
       if (!config.recaptcha || !config.recaptcha.secretKey) {
@@ -11,7 +11,7 @@ class ParticipantController {
         return { success: true };
       }
 
-      console.log('🔍 Verificando reCAPTCHA v3 con token:', token ? token.substring(0, 20) + '...' : 'null');
+      console.log('🔍 Verificando reCAPTCHA con token:', token ? token.substring(0, 20) + '...' : 'null');
 
       const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
         params: {
@@ -20,27 +20,54 @@ class ParticipantController {
         }
       });
 
-      console.log('📥 Respuesta reCAPTCHA v3:', response.data);
+      console.log('📥 Respuesta reCAPTCHA:', JSON.stringify(response.data, null, 2));
+
+      // Verificar respuesta básica
+      if (!response.data.success) {
+        console.log('❌ reCAPTCHA fallido - códigos de error:', response.data['error-codes']);
+        return {
+          success: false,
+          error: response.data['error-codes']?.join(', ') || 'Verificación fallida',
+          'error-codes': response.data['error-codes']
+        };
+      }
 
       // Para reCAPTCHA v3, verificar score (umbral recomendado: 0.5)
-      if (response.data.success && response.data.score !== undefined) {
+      if (response.data.score !== undefined) {
         const score = response.data.score;
-        console.log(`📊 Score reCAPTCHA: ${score}`);
+        console.log(`📊 Score reCAPTCHA v3: ${score}`);
 
         // Considerar válido si score >= 0.5
         if (score >= 0.5) {
           console.log('✅ Score aceptable, usuario válido');
-          return { success: true, score: score };
+          return { success: true, score: score, version: 'v3' };
         } else {
           console.log('❌ Score bajo, posible bot');
-          return { success: false, score: score, error: 'Score de reCAPTCHA demasiado bajo' };
+          return { success: false, score: score, error: 'Score de reCAPTCHA demasiado bajo', version: 'v3' };
         }
       }
 
-      // Para reCAPTCHA v2 o fallos
-      return response.data;
+      // Para reCAPTCHA v2, success=true es suficiente
+      console.log('✅ reCAPTCHA v2 verificado exitosamente');
+      return { success: true, version: 'v2' };
+
     } catch (error) {
       console.error('❌ Error verificando reCAPTCHA:', error.response?.data || error.message);
+
+      // Manejar errores específicos de la API
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        console.log('📋 Detalles del error:', errorData);
+
+        if (errorData['error-codes']) {
+          return {
+            success: false,
+            error: `Error de reCAPTCHA: ${errorData['error-codes'].join(', ')}`,
+            'error-codes': errorData['error-codes']
+          };
+        }
+      }
+
       return { success: false, error: 'Error interno de verificación' };
     }
   }
