@@ -113,19 +113,23 @@ TicketValidation.getDailyMetrics = async function(days = 7) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
+    // Para approved usamos created_at, para rejected usamos rejection_date
     const [results] = await sequelize.query(`
       SELECT
-        DATE(rejection_date) as date,
-        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
-        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count,
+        DATE(COALESCE(tv.rejection_date, tv.created_at)) as date,
+        COUNT(CASE WHEN tv.status = 'approved' THEN 1 END) as approved_count,
+        COUNT(CASE WHEN tv.status = 'rejected' THEN 1 END) as rejected_count,
         COUNT(*) as total_count
-      FROM ticket_validations
-      WHERE rejection_date >= ?
-        AND status IN ('approved', 'rejected')
-      GROUP BY DATE(rejection_date)
-      ORDER BY DATE(rejection_date) DESC
+      FROM ticket_validations tv
+      WHERE (tv.status = 'approved' AND tv.created_at >= ?)
+         OR (tv.status = 'rejected' AND tv.rejection_date >= ?)
+      GROUP BY DATE(COALESCE(tv.rejection_date, tv.created_at))
+      ORDER BY DATE(COALESCE(tv.rejection_date, tv.created_at)) DESC
     `, {
-      replacements: [startDate.toISOString().split('T')[0]]
+      replacements: [
+        startDate.toISOString().split('T')[0], // Para approved
+        startDate.toISOString().split('T')[0]  // Para rejected
+      ]
     });
 
     return results;

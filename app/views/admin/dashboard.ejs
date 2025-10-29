@@ -103,44 +103,6 @@
                     </div>
                 </div>
 
-                <!-- Webhook Information -->
-                <% if (webhookInfo) { %>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">🔗 Configuración Webhook n8n</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>URL donde n8n debe enviar respuesta:</h6>
-                                        <code class="d-block mb-3 p-2 bg-light rounded"><%= webhookInfo.responseUrl %></code>
-
-                                        <h6>URL del webhook de n8n:</h6>
-                                        <code class="d-block mb-3 p-2 bg-light rounded"><%= webhookInfo.n8nWebhookUrl %></code>
-
-                                        <h6>Credenciales:</h6>
-                                        <p><strong>Usuario:</strong> <%= webhookInfo.user %></p>
-                                        <p><strong>Contraseña:</strong> [oculta por seguridad]</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Ejemplo de Payload enviado a n8n:</h6>
-                                        <pre class="bg-light p-2 rounded small"><code><%= JSON.stringify(webhookInfo.examplePayload, null, 2) %></code></pre>
-
-                                        <h6>Ejemplo de Respuesta que n8n debe enviar:</h6>
-                                        <pre class="bg-light p-2 rounded small"><code><%= JSON.stringify(webhookInfo.exampleResponse, null, 2) %></code></pre>
-                                    </div>
-                                </div>
-                                <div class="alert alert-info mt-3">
-                                    <strong>Nota:</strong> La aplicación envía la imagen en base64 al webhook de n8n para validación automática.
-                                    n8n debe responder enviando un POST a la URL de respuesta con el resultado de la validación.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <% } %>
                 
                                 <!-- Error message -->
                                 <% if (typeof error !== 'undefined' && error) { %>
