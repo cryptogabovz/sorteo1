@@ -306,9 +306,11 @@ class ParticipantController {
         }
 
         // Para cualquier otro campo único, devolver error genérico
+        // Esto no debería suceder con cédula ya que no es única
+        console.error('❌ Error inesperado de unicidad:', error.fields);
         return res.status(400).json({
           success: false,
-          message: 'Ya existe un registro con estos datos únicos'
+          message: 'Error de validación de datos únicos'
         });
       }
 
