@@ -837,15 +837,16 @@ class AdminController {
         ticketNumber: participant.ticket_number
       };
 
-      // Soft delete: marcar como eliminado con razón
+      // IMPORTANTE: Liberar el número de ticket poniéndolo en null
+      // Esto permite que el número sea reutilizado por otros participantes
       await participant.update({
+        ticket_number: null, // Liberar el número para reutilización
         deleted_at: new Date(),
         deletion_reason: reason.trim(),
         deleted_by: adminId
       });
 
-      console.log(`♻️ Ticket ${ticketInfo.ticketNumber} marcado como eliminado - número disponible para reutilización`);
-
+      console.log(`🔓 Número de ticket ${ticketInfo.ticketNumber} liberado para reutilización`);
       console.log(`✅ Ticket eliminado (soft delete): ${ticketInfo.ticketNumber} - ${ticketInfo.name} ${ticketInfo.lastName} (${ticketInfo.cedula})`);
       console.log(`📝 Razón: ${reason.trim()}`);
 
@@ -854,6 +855,7 @@ class AdminController {
         message: `Ticket ${ticketInfo.ticketNumber} eliminado exitosamente`,
         deletedTicket: {
           ...ticketInfo,
+          ticket_number: null, // Indicar que el número fue liberado
           deletion_reason: reason.trim(),
           deleted_at: new Date()
         }

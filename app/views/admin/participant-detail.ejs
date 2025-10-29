@@ -116,12 +116,16 @@
                                         <% allTickets.forEach(ticket => { %>
                                             <tr <%= ticket.deleted_at ? 'class="table-secondary"' : '' %>>
                                                 <td>
-                                                    <strong class="<%= ticket.deleted_at ? 'text-muted' : 'text-primary' %>">
-                                                        #<%= ticket.ticket_number %>
-                                                        <% if (ticket.deleted_at) { %>
-                                                            <small class="text-danger">(ELIMINADO)</small>
-                                                        <% } %>
-                                                    </strong>
+                                                    <% if (ticket.deleted_at) { %>
+                                                        <span class="text-muted">
+                                                            <em>Sin número asignado</em>
+                                                            <br><small class="text-danger">(TICKET ELIMINADO)</small>
+                                                        </span>
+                                                    <% } else { %>
+                                                        <strong class="text-primary">
+                                                            #<%= ticket.ticket_number %>
+                                                        </strong>
+                                                    <% } %>
                                                 </td>
                                                 <td>
                                                     <% if (ticket.deleted_at) { %>
