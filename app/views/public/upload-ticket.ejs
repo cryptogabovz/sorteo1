@@ -70,6 +70,22 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Pantalla de procesamiento integrada -->
+                                <div id="processingScreen" class="processing-unified-container" style="display: none;">
+                                    <div class="unified-frame">
+                                        <img id="scannedImage" src="" alt="Ticket" class="img-fluid unified-image">
+                                        <!-- Barra de escaneo -->
+                                        <div class="scanner-line"></div>
+                                        <!-- Información inferior -->
+                                        <div class="unified-info" id="processingInfo">
+                                            <span class="unified-text" id="processingText">Escaneando imagen...</span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="cancelProcessingBtn" onclick="cancelProcessing()" style="display: none;">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Formulario -->
@@ -91,8 +107,8 @@
                                 </div>
                             </form>
 
-                            <!-- Pantalla de procesamiento -->
-                            <div id="processingScreen" class="text-center mt-4" style="display: none;">
+                            <!-- Pantalla de procesamiento (ahora oculta por defecto) -->
+                            <div id="oldProcessingScreen" class="text-center mt-4" style="display: none;">
                                 <div class="processing-animation mb-3">
                                     <!-- Contenedor de la imagen con marco y escáner -->
                                     <div class="scanner-container">

@@ -214,9 +214,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log('🚀 Iniciando envío del formulario...');
 
-        // Ocultar contenedor de subida y mostrar pantalla de procesamiento
+        // Ocultar contenedor de subida y mostrar pantalla de procesamiento integrada
         document.getElementById('unifiedContainer').style.display = 'none';
         document.getElementById('processingScreen').style.display = 'block';
+
+        // Mostrar la imagen en el contenedor de procesamiento
+        const scannedImage = document.getElementById('scannedImage');
+        if (scannedImage && localStorage.getItem('ticketPreview')) {
+            scannedImage.src = localStorage.getItem('ticketPreview');
+            console.log('✅ Imagen mostrada en pantalla de procesamiento integrada');
+        }
 
         // Mostrar loading en el botón (aunque estará oculto)
         submitBtn.disabled = true;
@@ -282,37 +289,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function showProcessingScreen(correlationId) {
         console.log('🚀 Iniciando modo escaneo en el mismo cuadro...');
 
-        // Cambiar el marco a modo escaneo
-        const unifiedFrame = document.querySelector('.unified-frame');
-        const scannerLine = document.getElementById('scannerLine');
-        const unifiedInfo = document.getElementById('unifiedInfo');
-        const unifiedText = document.getElementById('unifiedText');
-        const previewImage = document.getElementById('previewImage');
+        // Cambiar a pantalla de procesamiento integrada
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('processingScreen').style.display = 'block';
 
-        if (unifiedFrame && scannerLine && unifiedInfo && unifiedText) {
-            // Agregar clase de escaneo
-            unifiedFrame.classList.add('scanning');
+        // Mostrar la imagen en el contenedor de procesamiento
+        const scannedImage = document.getElementById('scannedImage');
+        const processingText = document.getElementById('processingText');
 
-            // Mostrar barra de escaneo
-            scannerLine.style.display = 'block';
-
-            // Cambiar texto y ocultar botón
-            unifiedText.textContent = 'Escaneando imagen...';
-            document.getElementById('changeBtn').style.display = 'none';
-
-            // Atenuar información pero mantener imagen visible
-            unifiedInfo.style.opacity = '0.7';
-
-            // Asegurar que la imagen siga visible durante el escaneo
-            if (previewImage && localStorage.getItem('ticketPreview')) {
-                previewImage.src = localStorage.getItem('ticketPreview');
-                console.log('✅ Imagen mantenida visible durante escaneo usando cache');
-            }
-
-            console.log('✅ Modo escaneo activado - barra visible, controles ocultos, imagen visible');
-        } else {
-            console.error('❌ Elementos del modo escaneo no encontrados');
+        if (scannedImage && localStorage.getItem('ticketPreview')) {
+            scannedImage.src = localStorage.getItem('ticketPreview');
+            console.log('✅ Imagen mostrada en pantalla de procesamiento integrada');
         }
+
+        if (processingText) {
+            processingText.textContent = 'Escaneando imagen...';
+        }
+
+        console.log('✅ Modo escaneo activado - imagen visible en contenedor integrado');
 
         // Iniciar Lottie animation (si existe)
         if (lottieAnimation) {
@@ -347,11 +341,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         const unifiedInfo = document.getElementById('unifiedInfo');
                         const unifiedText = document.getElementById('unifiedText');
 
-                        if (unifiedFrame && scannerLine && unifiedInfo && unifiedText) {
-                            unifiedFrame.classList.remove('scanning');
-                            scannerLine.style.display = 'none';
-                            unifiedText.textContent = '¡Ticket válido!';
-                            unifiedInfo.style.opacity = '1';
+                        // Cambiar a pantalla de éxito
+                        const processingText = document.getElementById('processingText');
+                        if (processingText) {
+                            processingText.textContent = '¡Ticket válido!';
                         }
 
                         console.log('✅ Validación exitosa - Redirigiendo a registro');
@@ -367,19 +360,20 @@ document.addEventListener('DOMContentLoaded', function() {
                             lottieAnimation.stop();
                         }
 
-                        // Restaurar apariencia del marco
-                        const unifiedFrame = document.querySelector('.unified-frame');
-                        const scannerLine = document.getElementById('scannerLine');
-                        const unifiedInfo = document.getElementById('unifiedInfo');
-                        const unifiedText = document.getElementById('unifiedText');
-                        const changeBtn = document.getElementById('changeBtn');
+                        // Cambiar a pantalla de error con botón para cargar nueva imagen
+                        const processingText = document.getElementById('processingText');
+                        const cancelBtn = document.getElementById('cancelProcessingBtn');
 
-                        if (unifiedFrame && scannerLine && unifiedInfo && unifiedText && changeBtn) {
-                            unifiedFrame.classList.remove('scanning');
-                            scannerLine.style.display = 'none';
-                            unifiedText.textContent = 'Ticket rechazado - Intente con otra imagen';
-                            unifiedInfo.style.opacity = '1';
-                            changeBtn.style.display = 'inline-block';
+                        if (processingText) {
+                            processingText.textContent = 'Ticket rechazado - Intente con otra imagen';
+                        }
+
+                        if (cancelBtn) {
+                            cancelBtn.style.display = 'inline-block';
+                            cancelBtn.innerHTML = '<i class="fas fa-redo me-1"></i> Cargar Nueva Imagen';
+                            cancelBtn.onclick = function() {
+                                resetUpload();
+                            };
                         }
 
                         console.log('❌ Validación rechazada:', result.reason);
@@ -422,6 +416,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ocultar también el error si estaba visible
         document.getElementById('processingError').style.display = 'none';
     }
+
+    function cancelProcessing() {
+        console.log('Cancelando procesamiento y volviendo al inicio...');
+        resetUpload();
+    }
+
+    // Hacer cancelProcessing disponible globalmente
+    window.cancelProcessing = cancelProcessing;
 
     function showProcessingError(reason) {
         // Ocultar spinner y progreso
