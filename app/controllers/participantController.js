@@ -240,7 +240,7 @@ class ParticipantController {
 
       const isAdditionalParticipation = existingCount > 0;
 
-      // Crear participante (ahora sin restricción de unicidad)
+      // Crear participante (cada registro es un boleto separado)
       const participant = await Participant.create({
         ticket_number: ticketNumber,
         name: sanitizedData.name,
@@ -256,7 +256,7 @@ class ParticipantController {
       delete req.session.validationResult;
 
       const message = isAdditionalParticipation
-        ? 'Participante registrado exitosamente (participación adicional)'
+        ? 'Boleto adicional registrado exitosamente'
         : 'Participante registrado exitosamente';
 
       res.json({
@@ -266,7 +266,8 @@ class ParticipantController {
           ticketNumber: participant.ticket_number,
           name: participant.name,
           lastName: participant.last_name,
-          isAdditionalParticipation: isAdditionalParticipation
+          isAdditionalParticipation: isAdditionalParticipation,
+          totalTicketsForUser: existingCount + 1
         }
       });
 
