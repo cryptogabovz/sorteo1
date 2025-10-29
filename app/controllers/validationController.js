@@ -365,8 +365,11 @@ class ValidationController {
         n8n_response_received: true
       };
 
-      // Nota: rejection_date se maneja opcionalmente para métricas futuras
-      // Por ahora no se actualiza para evitar errores de columna inexistente
+      // Si el ticket es rechazado, guardar fecha de rechazo para métricas
+      if (!valid) {
+        updateData.rejection_date = new Date().toISOString().split('T')[0]; // Solo fecha YYYY-MM-DD
+        console.log(`📅 Ticket rechazado - Fecha guardada: ${updateData.rejection_date}`);
+      }
 
       await ticketValidation.update(updateData);
 

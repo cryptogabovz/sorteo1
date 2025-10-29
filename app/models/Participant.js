@@ -167,7 +167,8 @@ Participant.getStats = async function() {
       COUNT(*) as total_participants,
       COUNT(CASE WHEN ticket_validated = true THEN 1 END) as validated_tickets,
       COUNT(CASE WHEN ticket_validated = false THEN 1 END) as rejected_tickets,
-      COUNT(DISTINCT province) as provinces_count
+      COUNT(DISTINCT province) as provinces_count,
+      (SELECT COUNT(*) FROM ticket_validations WHERE status = 'rejected') as rejected_ticket_validations
     FROM participants
   `);
 

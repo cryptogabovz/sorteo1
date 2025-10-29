@@ -50,12 +50,11 @@ const TicketValidation = sequelize.define('TicketValidation', {
     allowNull: false,
     comment: 'Fecha de expiración de la validación pendiente'
   },
-  // Nuevo campo para métricas de tickets rechazados (opcional)
-  // rejection_date: {
-  //   type: DataTypes.DATEONLY,
-  //   allowNull: true,
-  //   comment: 'Fecha de rechazo (solo para tickets rechazados)'
-  // }
+  rejection_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    comment: 'Fecha de rechazo (solo para tickets rechazados)'
+  }
 }, {
   tableName: 'ticket_validations',
   timestamps: true,
@@ -73,9 +72,9 @@ const TicketValidation = sequelize.define('TicketValidation', {
     {
       fields: ['n8n_response_received']
     },
-    // {
-    //   fields: ['rejection_date']
-    // }
+    {
+      fields: ['rejection_date']
+    }
   ]
 });
 
