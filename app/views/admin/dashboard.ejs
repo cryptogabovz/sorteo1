@@ -121,7 +121,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@mui/x-charts@7.0.0/umd/index.js"></script>
+    <script>
+        // Cargar MUI X-Charts dinámicamente
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/@mui/x-charts@7.0.0/umd/index.js';
+        script.onload = function() {
+            console.log('MUI X-Charts cargado correctamente');
+            window.muiChartsLoaded = true;
+        };
+        script.onerror = function() {
+            console.error('Error cargando MUI X-Charts');
+        };
+        document.head.appendChild(script);
+    </script>
     <script src="/js/admin-dashboard.js"></script>
 
 
@@ -228,23 +240,31 @@
             });
         }
 
-        // Renderizar la app React
-        document.addEventListener('DOMContentLoaded', function() {
+        // Renderizar la app React después de que MUI se cargue
+        function initializeChart() {
             console.log('DOM cargado, inicializando gráfico...');
             const container = document.getElementById('chart-container');
             if (container) {
-                console.log('Contenedor encontrado, renderizando React...');
-                try {
-                    ReactDOM.render(React.createElement(App), container);
-                    console.log('React renderizado exitosamente');
-                } catch (error) {
-                    console.error('Error renderizando React:', error);
-                    container.innerHTML = '<div style="text-align: center; color: red;">Error cargando gráfico</div>';
+                console.log('Contenedor encontrado, verificando MUI...');
+                if (typeof mui !== 'undefined' && mui.xCharts) {
+                    console.log('MUI disponible, renderizando React...');
+                    try {
+                        ReactDOM.render(React.createElement(App), container);
+                        console.log('React renderizado exitosamente');
+                    } catch (error) {
+                        console.error('Error renderizando React:', error);
+                        container.innerHTML = '<div style="text-align: center; color: red;">Error cargando gráfico</div>';
+                    }
+                } else {
+                    console.log('MUI no disponible aún, esperando...');
+                    setTimeout(initializeChart, 100);
                 }
             } else {
                 console.error('Contenedor del gráfico no encontrado');
             }
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeChart);
 
         // Función global para cambiar días (llamada desde botones HTML)
         window.changeDays = async function(days) {
