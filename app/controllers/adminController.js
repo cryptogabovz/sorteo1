@@ -557,54 +557,17 @@ class AdminController {
               adminUsername: req.session.adminUsername
             });
           } else {
-            // Buscar por cédula si el ID parece ser una cédula (solo números)
-            if (/^\d+$/.test(id)) {
-              console.log(`🔍 Buscando por cédula: ${id}`);
-
-              // Buscar todos los participantes con esta cédula
-              const participants = await Participant.findAll({
-                where: { cedula: id },
-                order: [['created_at', 'ASC']]
-              });
-
-              if (!participants || participants.length === 0) {
-                console.log(`❌ No se encontraron participantes con cédula: ${id}`);
-                return res.render('admin/participants', {
-                  title: 'Participante no encontrado',
-                  error: 'Participante no encontrado',
-                  participants: [],
-                  provinces: [],
-                  currentPage: 1,
-                  totalPages: 1,
-                  totalCount: 0,
-                  filters: {}
-                });
-              }
-
-              // Usar el primer participante para información básica
-              const mainParticipant = participants[0];
-
-              console.log(`✅ Encontrados ${participants.length} tickets para cédula ${id}: ${mainParticipant.name} ${mainParticipant.last_name}`);
-
-              res.render('admin/participant-detail', {
-                title: `Detalle - ${mainParticipant.name} ${mainParticipant.last_name}`,
-                participant: mainParticipant,
-                allTickets: participants, // Todos los tickets de esta persona
-                adminUsername: req.session.adminUsername
-              });
-            } else {
-              console.log(`❌ ID inválido: ${id} (no es UUID ni cédula)`);
-              return res.render('admin/participants', {
-                title: 'ID inválido',
-                error: 'ID de participante inválido',
-                participants: [],
-                provinces: [],
-                currentPage: 1,
-                totalPages: 1,
-                totalCount: 0,
-                filters: {}
-              });
-            }
+            console.log(`❌ ID inválido: ${id} (no es UUID válido)`);
+            return res.render('admin/participants', {
+              title: 'ID inválido',
+              error: 'ID de participante inválido',
+              participants: [],
+              provinces: [],
+              currentPage: 1,
+              totalPages: 1,
+              totalCount: 0,
+              filters: {}
+            });
           }
         }
       }
