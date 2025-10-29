@@ -6,10 +6,12 @@ class ParticipantController {
   // Verificar reCAPTCHA
   async verifyRecaptcha(token) {
     try {
-      if (!config.recaptcha.secretKey) {
+      if (!config.recaptcha || !config.recaptcha.secretKey) {
         console.log('⚠️ reCAPTCHA no configurado, omitiendo verificación');
         return { success: true };
       }
+
+      console.log('🔍 Verificando reCAPTCHA con token:', token ? token.substring(0, 20) + '...' : 'null');
 
       const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
         params: {
@@ -18,9 +20,11 @@ class ParticipantController {
         }
       });
 
+      console.log('📥 Respuesta reCAPTCHA:', response.data);
+
       return response.data;
     } catch (error) {
-      console.error('Error verificando reCAPTCHA:', error);
+      console.error('❌ Error verificando reCAPTCHA:', error.response?.data || error.message);
       return { success: false, error: 'Error interno de verificación' };
     }
   }
