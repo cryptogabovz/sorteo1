@@ -207,8 +207,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        console.log('🚀 Iniciando envío del formulario...');
+
         // Ocultar contenedor de subida y mostrar pantalla de procesamiento
-        document.getElementById('uploadContainer').style.display = 'none';
+        document.getElementById('unifiedContainer').style.display = 'none';
         document.getElementById('processingScreen').style.display = 'block';
 
         // Mostrar loading en el botón (aunque estará oculto)
@@ -219,43 +221,53 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append('ticket', selectedFile);
 
+            console.log('📤 Enviando FormData a /api/upload-ticket...');
+
             const response = await fetch('/api/upload-ticket', {
                 method: 'POST',
                 body: formData
             });
 
+            console.log('📥 Respuesta recibida:', response.status);
+
             const result = await response.json();
+            console.log('📄 Resultado JSON:', result);
 
             if (result.success) {
                 if (result.nextStep === 'register') {
                     // Ticket válido, redirigir a registro
+                    console.log('✅ Ticket válido - Redirigiendo a registro');
                     showMessage('¡Ticket válido! Redirigiendo...', 'success');
                     setTimeout(() => {
                         window.location.href = '/registro';
                     }, 1500);
                 } else if (result.nextStep === 'wait') {
                     // Validación asíncrona - mostrar pantalla de espera
+                    console.log('⏳ Validación asíncrona - Iniciando polling con correlationId:', result.correlationId);
                     showProcessingScreen(result.correlationId);
                 } else if (result.nextStep === 'retry') {
                     // Ticket inválido
+                    console.log('❌ Ticket rechazado:', result.reason);
                     showMessage(`Ticket rechazado: ${result.reason}`, 'danger');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = 'Validar Ticket';
                 } else {
                     // Ticket válido (síncrono)
+                    console.log('✅ Ticket válido (síncrono) - Redirigiendo a registro');
                     showMessage('¡Ticket válido! Redirigiendo...', 'success');
                     setTimeout(() => {
                         window.location.href = '/registro';
                     }, 1500);
                 }
             } else {
+                console.log('❌ Error en respuesta:', result.message);
                 showMessage(result.message || 'Error al procesar el ticket', 'danger');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Validar Ticket';
             }
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error('❌ Error en handleSubmit:', error);
             showMessage('Error de conexión. Inténtalo nuevamente.', 'danger');
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Validar Ticket';
@@ -393,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideProcessingScreen() {
-        document.getElementById('uploadContainer').style.display = 'block';
+        document.getElementById('unifiedContainer').style.display = 'block';
         document.getElementById('processingScreen').style.display = 'none';
         // Ocultar también el error si estaba visible
         document.getElementById('processingError').style.display = 'none';
