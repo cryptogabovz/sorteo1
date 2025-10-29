@@ -182,6 +182,16 @@ class ParticipantController {
 
       const validationResult = req.session.validationResult;
 
+      // Obtener el nombre del archivo final desde la validación
+      let finalFilename = null;
+      if (validationResult.correlationId) {
+        const ticketValidation = await TicketValidation.findByCorrelationId(validationResult.correlationId);
+        if (ticketValidation && ticketValidation.image_filename) {
+          finalFilename = ticketValidation.image_filename;
+          console.log('📁 Nombre de archivo final obtenido:', finalFilename);
+        }
+      }
+
       // Si hay correlationId, verificar estado en BD
       if (validationResult.correlationId) {
         const ticketValidation = await TicketValidation.findByCorrelationId(validationResult.correlationId);
@@ -257,7 +267,7 @@ class ParticipantController {
           phone: sanitizedData.phone || existingParticipant.phone, // Usar nuevo teléfono si proporcionado
           province: sanitizedData.province || existingParticipant.province, // Usar nueva provincia si proporcionada
           ticket_validated: true,
-          ticket_image_url: validationResult.ticketImageUrl || null
+          ticket_image_url: finalFilename ? `/uploads/${finalFilename}` : validationResult.ticketImageUrl || null
         };
       } else {
         // Nuevo participante
@@ -269,7 +279,7 @@ class ParticipantController {
           phone: sanitizedData.phone,
           province: sanitizedData.province,
           ticket_validated: true,
-          ticket_image_url: validationResult.ticketImageUrl || null
+          ticket_image_url: `/uploads/${finalFilename}` // Usar el nombre con código de verificación
         };
       }
 

@@ -104,22 +104,58 @@ class ValidationController {
       const base64Image = imageBuffer.toString('base64');
       console.log('📊 Tamaño imagen convertida:', (base64Image.length / 1024 / 1024).toFixed(2), 'MB');
 
-      // Guardar la imagen original sin renombrar para uso como comprobante
-      const originalFilename = req.file.originalname;
-      const finalImagePath = path.join(__dirname, '../../public/uploads', originalFilename);
+      // Generar código de verificación único para el nombre del archivo
+      // Usar timestamp + correlationId para mayor unicidad
+      const timestamp = Date.now();
+      const verificationCode = `${correlationId.substring(0, 8)}-${timestamp}`;
+      const fileExtension = path.extname(req.file.originalname).toLowerCase();
+      const finalFilename = `${verificationCode}${fileExtension}`;
+      const finalImagePath = path.join(__dirname, '../../public/uploads', finalFilename);
 
-      // Si el archivo ya existe con el nombre original, no lo sobreescribimos
-      // Esto permite múltiples uploads con el mismo nombre
-      if (!fs.existsSync(finalImagePath)) {
+      console.log('🔢 Código de verificación generado:', verificationCode);
+      console.log('📁 Nombre final del archivo:', finalFilename);
+      console.log('🗂️ Ruta final:', finalImagePath);
+
+      // Mover la imagen temporal al nombre final con código de verificación
+      try {
+        // Asegurar que el directorio existe
+        const uploadDir = path.dirname(finalImagePath);
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+          console.log('📁 Directorio de uploads creado:', uploadDir);
+        }
+
+        fs.renameSync(imagePath, finalImagePath);
+        console.log('💾 Imagen guardada con código de verificación:', finalFilename);
+
+        // Verificar que el archivo se guardó correctamente
+        if (fs.existsSync(finalImagePath)) {
+          const stats = fs.statSync(finalImagePath);
+          console.log('✅ Archivo verificado - Tamaño:', stats.size, 'bytes');
+        } else {
+          throw new Error('Archivo no existe después de guardar');
+        }
+
+      } catch (moveError) {
+        console.error('❌ Error moviendo imagen:', moveError.message);
+        // Intentar copiar como fallback
         try {
           fs.copyFileSync(imagePath, finalImagePath);
-          console.log('💾 Imagen guardada como comprobante:', originalFilename);
+          console.log('💾 Imagen copiada como fallback:', finalFilename);
+
+          // Verificar archivo copiado
+          if (fs.existsSync(finalImagePath)) {
+            const stats = fs.statSync(finalImagePath);
+            console.log('✅ Archivo copiado verificado - Tamaño:', stats.size, 'bytes');
+          }
+
         } catch (copyError) {
-          console.error('⚠️ Error guardando imagen como comprobante:', copyError.message);
-          // No fallar por esto, continuar con el proceso
+          console.error('❌ Error copiando imagen:', copyError.message);
+          return res.status(500).json({
+            success: false,
+            message: 'Error guardando la imagen del ticket'
+          });
         }
-      } else {
-        console.log('📋 Imagen ya existe con nombre original, usando versión existente');
       }
 
       // Crear registro de validación pendiente
@@ -129,15 +165,17 @@ class ValidationController {
       console.log('💾 Creando registro de validación en BD...');
       console.log('Datos:', {
         correlation_id: correlationId,
-        image_path: finalImagePath, // Usar la ruta del archivo original
-        image_filename: originalFilename, // Usar el nombre original
+        image_path: finalImagePath, // Usar la ruta del archivo con código de verificación
+        image_filename: finalFilename, // Usar el nombre con código de verificación
+        verification_code: verificationCode, // Guardar código de verificación
         expires_at: expiresAt
       });
 
       const ticketValidation = await TicketValidation.create({
         correlation_id: correlationId,
-        image_path: finalImagePath, // Usar la ruta del archivo original
-        image_filename: originalFilename, // Usar el nombre original
+        image_path: finalImagePath, // Usar la ruta del archivo con código de verificación
+        image_filename: finalFilename, // Usar el nombre con código de verificación
+        verification_code: verificationCode, // Guardar código de verificación
         status: 'pending',
         expires_at: expiresAt
       });
