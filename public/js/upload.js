@@ -182,9 +182,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            previewImage.src = e.target.result;
+            // Guardar la imagen en cache del navegador para uso posterior
+            const imageUrl = e.target.result;
+            localStorage.setItem('ticketPreview', imageUrl);
+            localStorage.setItem('ticketFilename', file.name);
+
+            previewImage.src = imageUrl;
             previewContainer.style.display = 'block';
-            console.log('Vista previa de imagen mostrada inmediatamente');
+            console.log('Vista previa de imagen mostrada y guardada en cache');
         };
         reader.onerror = function(error) {
             console.error('Error cargando vista previa:', error);
@@ -282,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const scannerLine = document.getElementById('scannerLine');
         const unifiedInfo = document.getElementById('unifiedInfo');
         const unifiedText = document.getElementById('unifiedText');
+        const previewImage = document.getElementById('previewImage');
 
         if (unifiedFrame && scannerLine && unifiedInfo && unifiedText) {
             // Agregar clase de escaneo
@@ -294,10 +300,16 @@ document.addEventListener('DOMContentLoaded', function() {
             unifiedText.textContent = 'Escaneando imagen...';
             document.getElementById('changeBtn').style.display = 'none';
 
-            // Atenuar información
+            // Atenuar información pero mantener imagen visible
             unifiedInfo.style.opacity = '0.7';
 
-            console.log('✅ Modo escaneo activado - barra visible, controles ocultos');
+            // Asegurar que la imagen siga visible durante el escaneo
+            if (previewImage && localStorage.getItem('ticketPreview')) {
+                previewImage.src = localStorage.getItem('ticketPreview');
+                console.log('✅ Imagen mantenida visible durante escaneo usando cache');
+            }
+
+            console.log('✅ Modo escaneo activado - barra visible, controles ocultos, imagen visible');
         } else {
             console.error('❌ Elementos del modo escaneo no encontrados');
         }

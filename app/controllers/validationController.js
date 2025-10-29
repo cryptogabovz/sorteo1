@@ -104,6 +104,24 @@ class ValidationController {
       const base64Image = imageBuffer.toString('base64');
       console.log('📊 Tamaño imagen convertida:', (base64Image.length / 1024 / 1024).toFixed(2), 'MB');
 
+      // Guardar la imagen original sin renombrar para uso como comprobante
+      const originalFilename = req.file.originalname;
+      const finalImagePath = path.join(__dirname, '../../public/uploads', originalFilename);
+
+      // Si el archivo ya existe con el nombre original, no lo sobreescribimos
+      // Esto permite múltiples uploads con el mismo nombre
+      if (!fs.existsSync(finalImagePath)) {
+        try {
+          fs.copyFileSync(imagePath, finalImagePath);
+          console.log('💾 Imagen guardada como comprobante:', originalFilename);
+        } catch (copyError) {
+          console.error('⚠️ Error guardando imagen como comprobante:', copyError.message);
+          // No fallar por esto, continuar con el proceso
+        }
+      } else {
+        console.log('📋 Imagen ya existe con nombre original, usando versión existente');
+      }
+
       // Crear registro de validación pendiente
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 60); // Expira en 60 minutos para dar tiempo a n8n
@@ -111,15 +129,15 @@ class ValidationController {
       console.log('💾 Creando registro de validación en BD...');
       console.log('Datos:', {
         correlation_id: correlationId,
-        image_path: imagePath,
-        image_filename: req.file.filename,
+        image_path: finalImagePath, // Usar la ruta del archivo original
+        image_filename: originalFilename, // Usar el nombre original
         expires_at: expiresAt
       });
 
       const ticketValidation = await TicketValidation.create({
         correlation_id: correlationId,
-        image_path: imagePath,
-        image_filename: req.file.filename,
+        image_path: finalImagePath, // Usar la ruta del archivo original
+        image_filename: originalFilename, // Usar el nombre original
         status: 'pending',
         expires_at: expiresAt
       });
