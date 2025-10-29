@@ -812,11 +812,22 @@ class AdminController {
     }
   }
 
-  // Eliminar un ticket específico (no todo el usuario)
+  // Eliminar un ticket específico (soft delete con razón)
   async deleteTicket(req, res) {
     try {
       const { id } = req.params;
-      console.log(`🗑️ Eliminando ticket con ID: ${id}`);
+      const { reason } = req.body;
+      const adminId = req.session.adminId;
+
+      console.log(`🗑️ Eliminando ticket con ID: ${id}, Razón: ${reason}`);
+
+      // Validar que se proporcione una razón
+      if (!reason || reason.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Debe proporcionar una razón para eliminar el ticket'
+        });
+      }
 
       const participant = await Participant.findByPk(id);
 
@@ -828,6 +839,14 @@ class AdminController {
         });
       }
 
+      // Verificar que no esté ya eliminado
+      if (participant.deleted_at) {
+        return res.status(400).json({
+          success: false,
+          message: 'Este ticket ya fue eliminado anteriormente'
+        });
+      }
+
       // Guardar información para logging
       const ticketInfo = {
         cedula: participant.cedula,
@@ -836,15 +855,24 @@ class AdminController {
         ticketNumber: participant.ticket_number
       };
 
-      // Eliminar el ticket
-      await participant.destroy();
+      // Soft delete: marcar como eliminado con razón
+      await participant.update({
+        deleted_at: new Date(),
+        deletion_reason: reason.trim(),
+        deleted_by: adminId
+      });
 
-      console.log(`✅ Ticket eliminado: ${ticketInfo.ticketNumber} - ${ticketInfo.name} ${ticketInfo.lastName} (${ticketInfo.cedula})`);
+      console.log(`✅ Ticket eliminado (soft delete): ${ticketInfo.ticketNumber} - ${ticketInfo.name} ${ticketInfo.lastName} (${ticketInfo.cedula})`);
+      console.log(`📝 Razón: ${reason.trim()}`);
 
       res.json({
         success: true,
         message: `Ticket ${ticketInfo.ticketNumber} eliminado exitosamente`,
-        deletedTicket: ticketInfo
+        deletedTicket: {
+          ...ticketInfo,
+          deletion_reason: reason.trim(),
+          deleted_at: new Date()
+        }
       });
 
     } catch (error) {

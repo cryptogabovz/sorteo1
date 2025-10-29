@@ -68,6 +68,18 @@ const Participant = sequelize.define('participants', {
   ticket_image_url: {
     type: DataTypes.STRING(255),
     allowNull: true
+  },
+  deleted_at: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  deletion_reason: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  deleted_by: {
+    type: DataTypes.UUID,
+    allowNull: true
   }
 }, {
   indexes: [
@@ -92,7 +104,11 @@ const Participant = sequelize.define('participants', {
 
 // Método para obtener próximo número de ticket disponible
 Participant.getNextTicketNumber = async function() {
+  // Buscar el último ticket activo (no eliminado)
   const lastParticipant = await this.findOne({
+    where: {
+      deleted_at: null // Solo tickets no eliminados
+    },
     order: [['ticket_number', 'DESC']]
   });
 
