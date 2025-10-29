@@ -47,42 +47,11 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
 
         try {
-            // Ejecutar reCAPTCHA v3 si está disponible
-            let recaptchaToken = null;
-            if (typeof grecaptcha !== 'undefined') {
-                console.log('🔒 Ejecutando reCAPTCHA v3...');
-
-                // Verificar que grecaptcha esté listo
-                await new Promise((resolve) => {
-                    if (grecaptcha.ready) {
-                        grecaptcha.ready(resolve);
-                    } else {
-                        // Fallback si ready no está disponible
-                        setTimeout(resolve, 1000);
-                    }
-                });
-
-                // Obtener siteKey desde variable global o configuración
-                const siteKey = window.RECAPTCHA_SITE_KEY || '<%= typeof recaptcha !== "undefined" ? recaptcha.siteKey : "" %>';
-                console.log('🔑 Usando siteKey:', siteKey ? siteKey.substring(0, 10) + '...' : 'null');
-
-                if (siteKey && siteKey.trim()) {
-                    recaptchaToken = await grecaptcha.execute(siteKey, { action: 'register' });
-                    console.log('✅ Token reCAPTCHA obtenido:', recaptchaToken ? recaptchaToken.substring(0, 20) + '...' : 'null');
-                } else {
-                    console.log('⚠️ SiteKey no disponible, omitiendo reCAPTCHA');
-                }
-            } else {
-                console.log('⚠️ grecaptcha no disponible, omitiendo reCAPTCHA');
-            }
+            // reCAPTCHA temporalmente deshabilitado
+            console.log('⚠️ reCAPTCHA temporalmente deshabilitado');
 
             const formData = new FormData(registerForm);
             const data = Object.fromEntries(formData.entries());
-
-            // Agregar token de reCAPTCHA si existe
-            if (recaptchaToken) {
-                data['g-recaptcha-response'] = recaptchaToken;
-            }
 
             console.log('📤 Enviando datos de registro...');
 

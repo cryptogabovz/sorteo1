@@ -77,7 +77,10 @@ class ParticipantController {
     try {
       const { name, lastName, cedula, phone, province, termsAccepted, 'g-recaptcha-response': recaptchaToken } = req.body;
 
-      // Verificar reCAPTCHA si está configurado
+      // Verificar reCAPTCHA si está configurado (TEMPORALMENTE DESHABILITADO)
+      // TODO: Re-habilitar cuando se configure correctamente reCAPTCHA v3
+      console.log('⚠️ reCAPTCHA temporalmente deshabilitado para testing');
+      /*
       if (config.recaptcha && config.recaptcha.secretKey && config.recaptcha.siteKey) {
         console.log('🔒 reCAPTCHA configurado, verificando...');
         console.log('🔑 Token recibido:', recaptchaToken ? recaptchaToken.substring(0, 20) + '...' : 'null');
@@ -111,6 +114,7 @@ class ParticipantController {
       } else {
         console.log('⚠️ reCAPTCHA no configurado o incompleto, omitiendo verificación');
       }
+      */
 
       // Validar aceptación de términos y condiciones
       if (!termsAccepted || termsAccepted !== 'on') {
