@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const config = require('./app/config/env');
 
+const { migrateSoftDelete } = require('./app/scripts/migrate-soft-delete');
+
 // Importar modelos y sincronizar base de datos
 const { syncDatabase } = require('./app/models');
 
@@ -55,6 +57,18 @@ const startServer = async () => {
   try {
     // Sincronizar base de datos PRIMERO
     await syncDatabase();
+
+    // Ejecutar migración de soft delete DESPUÉS de sincronizar BD
+    console.log('🔄 Ejecutando migración de soft delete...');
+    try {
+      await migrateSoftDelete();
+      console.log('✅ Migración de soft delete completada');
+    } catch (migrateError) {
+      console.error('❌ Error en migración de soft delete:', migrateError.message);
+      console.error('Stack trace:', migrateError.stack);
+      // No bloquear el inicio por errores de migración
+      console.log('⚠️ Continuando con el inicio del servidor...');
+    }
 
     // Ejecutar corrección de restricciones DESPUÉS de sincronizar BD
     if (process.env.NODE_ENV === 'production') {
