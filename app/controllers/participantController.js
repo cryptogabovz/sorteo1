@@ -31,7 +31,7 @@ class ParticipantController {
       const { name, lastName, cedula, phone, province, termsAccepted, 'g-recaptcha-response': recaptchaToken } = req.body;
 
       // Verificar reCAPTCHA si está configurado
-      if (config.recaptcha.secretKey && config.recaptcha.siteKey) {
+      if (config.recaptcha && config.recaptcha.secretKey && config.recaptcha.siteKey) {
         if (!recaptchaToken) {
           return res.status(400).json({
             success: false,

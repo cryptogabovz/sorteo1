@@ -104,9 +104,9 @@
                                 </div>
 
                                 <!-- reCAPTCHA -->
-                                <% if (typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey) { %>
+                                <% if (typeof recaptcha !== 'undefined' && recaptcha.siteKey) { %>
                                     <div class="recaptcha-container mb-4">
-                                        <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+                                        <div class="g-recaptcha" data-sitekey="<%= recaptcha.siteKey %>"></div>
                                     </div>
                                 <% } %>
 

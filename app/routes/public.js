@@ -73,7 +73,8 @@ router.get('/registro', (req, res) => {
   console.log('✅ Acceso permitido a /registro - Validación confirmada');
   res.render('public/register', {
     title: 'Registro de Participante',
-    validationResult: req.session.validationResult
+    validationResult: req.session.validationResult,
+    recaptcha: require('../config/env').recaptcha
   });
 });
 
