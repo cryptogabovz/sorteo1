@@ -60,14 +60,9 @@ const startServer = async () => {
     if (process.env.NODE_ENV === 'production') {
       console.log('🔧 Ejecutando corrección de restricciones en producción...');
       try {
+        // Importar y ejecutar la función
         const fixConstraints = require('./fix-constraints');
-        if (typeof fixConstraints === 'function') {
-          await fixConstraints();
-        } else if (fixConstraints.default && typeof fixConstraints.default === 'function') {
-          await fixConstraints.default();
-        } else {
-          console.log('⚠️ fix-constraints no exporta función, omitiendo...');
-        }
+        await fixConstraints();
         console.log('✅ Corrección de restricciones completada');
       } catch (fixError) {
         console.error('❌ Error en corrección de restricciones:', fixError.message);

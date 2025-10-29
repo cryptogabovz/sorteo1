@@ -4,82 +4,68 @@ async function fixConstraints() {
   try {
     console.log('🔧 Aplicando corrección final de restricciones...');
 
-    // 1. Verificar restricciones actuales
-    const [constraints] = await sequelize.query(`
-      SELECT conname as constraint_name, contype as constraint_type
-      FROM pg_constraint
-      WHERE conrelid = 'participants'::regclass;
+    // 1. Verificar restricciones actuales usando índices en lugar de constraints
+    const [indexes] = await sequelize.query(`
+      SELECT indexname as index_name, indexdef as index_definition
+      FROM pg_indexes
+      WHERE tablename = 'participants';
     `);
 
-    console.log('Restricciones actuales:');
-    constraints.forEach(c => {
-      console.log('- Nombre:', c.constraint_name, 'Tipo:', c.constraint_type);
+    console.log('Índices actuales en tabla participants:');
+    indexes.forEach(idx => {
+      console.log('- Nombre:', idx.index_name);
+      console.log('  Definición:', idx.index_definition);
     });
 
-    // 2. Eliminar restricción de cédula si existe (múltiples métodos)
-    const cedulaConstraint = constraints.find(c => c.constraint_name === 'participants_cedula');
-    if (cedulaConstraint) {
-      console.log('❌ Eliminando restricción participants_cedula...');
+    // 2. Buscar índice único en cedula
+    const cedulaIndex = indexes.find(idx =>
+      idx.index_name.includes('cedula') &&
+      idx.index_definition.includes('UNIQUE')
+    );
 
-      // Intentar múltiples métodos para eliminar la restricción
+    if (cedulaIndex) {
+      console.log('❌ Eliminando índice único en cedula:', cedulaIndex.index_name);
+
       try {
-        await sequelize.query('ALTER TABLE participants DROP CONSTRAINT IF EXISTS participants_cedula;');
-        console.log('✅ Eliminada con ALTER TABLE');
-      } catch (error) {
-        console.log('⚠️ ALTER TABLE falló, intentando con Sequelize...');
+        await sequelize.query(`DROP INDEX IF EXISTS ${cedulaIndex.index_name};`);
+        console.log('✅ Índice único eliminado exitosamente');
+      } catch (dropError) {
+        console.error('❌ Error eliminando índice:', dropError.message);
+        // Intentar con ALTER TABLE como último recurso
         try {
-          const queryInterface = sequelize.getQueryInterface();
-          await queryInterface.removeConstraint('participants', 'participants_cedula');
-          console.log('✅ Eliminada con Sequelize');
-        } catch (sequelizeError) {
-          console.log('⚠️ Sequelize falló, intentando con DROP INDEX...');
-          try {
-            await sequelize.query('DROP INDEX IF EXISTS participants_cedula;');
-            console.log('✅ Eliminada con DROP INDEX');
-          } catch (indexError) {
-            console.log('⚠️ DROP INDEX falló, intentando recrear columna...');
-            // Último recurso: recrear columna sin restricciones
-            await sequelize.query(`
-              DO $$
-              BEGIN
-                -- Remover cualquier restricción única en cedula
-                ALTER TABLE participants DROP CONSTRAINT IF EXISTS participants_cedula;
-                DROP INDEX IF EXISTS participants_cedula;
-                -- Asegurar que la columna permita NULL temporalmente
-                ALTER TABLE participants ALTER COLUMN cedula DROP NOT NULL;
-                ALTER TABLE participants ALTER COLUMN cedula SET NOT NULL;
-              EXCEPTION
-                WHEN others THEN
-                  RAISE NOTICE 'Error en corrección: %', SQLERRM;
-              END
-              $$;
-            `);
-            console.log('✅ Corrección con DO block completada');
-          }
+          await sequelize.query('ALTER TABLE participants DROP CONSTRAINT IF EXISTS participants_cedula;');
+          console.log('✅ Restricción eliminada con ALTER TABLE');
+        } catch (alterError) {
+          console.error('❌ Error con ALTER TABLE:', alterError.message);
         }
       }
     } else {
-      console.log('ℹ️ Restricción participants_cedula no existe');
+      console.log('ℹ️ No se encontró índice único en cedula');
     }
 
     // 3. Verificar que ticket_number siga siendo único
-    const ticketConstraint = constraints.find(c => c.constraint_name === 'participants_ticket_number');
-    if (ticketConstraint) {
-      console.log('✅ Restricción participants_ticket_number existe (correcto)');
+    const ticketIndex = indexes.find(idx =>
+      idx.index_name.includes('ticket_number') &&
+      idx.index_definition.includes('UNIQUE')
+    );
+
+    if (ticketIndex) {
+      console.log('✅ Índice único en ticket_number existe (correcto)');
     } else {
-      console.log('⚠️ ADVERTENCIA: Restricción participants_ticket_number no encontrada');
+      console.log('⚠️ ADVERTENCIA: Índice único en ticket_number no encontrado');
     }
 
-    // 4. Verificar restricciones finales
-    const [finalConstraints] = await sequelize.query(`
-      SELECT conname as constraint_name, contype as constraint_type
-      FROM pg_constraint
-      WHERE conrelid = 'participants'::regclass;
+    // 4. Verificar índices finales
+    const [finalIndexes] = await sequelize.query(`
+      SELECT indexname as index_name, indexdef as index_definition
+      FROM pg_indexes
+      WHERE tablename = 'participants';
     `);
 
-    console.log('Restricciones finales:');
-    finalConstraints.forEach(c => {
-      console.log('- Nombre:', c.constraint_name, 'Tipo:', c.constraint_type);
+    console.log('Índices finales:');
+    finalIndexes.forEach(idx => {
+      console.log('- Nombre:', idx.index_name);
+      console.log('  Definición:', idx.index_definition);
     });
 
     // 5. Probar creación de registro con cédula existente
@@ -137,7 +123,8 @@ async function fixConstraints() {
       console.error('Campos con error de unicidad:', error.fields);
     }
   } finally {
-    await sequelize.close();
+    // NO cerrar conexión aquí - dejar que app.js la maneje
+    console.log('🔧 Corrección finalizada, dejando conexión abierta para app.js');
   }
 }
 
