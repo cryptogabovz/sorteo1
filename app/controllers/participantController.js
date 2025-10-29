@@ -284,58 +284,23 @@ class ParticipantController {
         });
       }
 
-      // Manejar errores de unicidad - ahora permitimos múltiples registros
+      // Manejar errores de unicidad - ticket_number único (cedula ya no es única)
       if (error.name === 'SequelizeUniqueConstraintError') {
-        console.log('⚠️ Error de unicidad detectado, intentando participación adicional');
-        console.log('📋 Detalles del error de unicidad:', error.fields);
+        console.log('⚠️ Error de unicidad detectado:', error.fields);
 
-        // Para cédula duplicada, permitir continuar (múltiples tickets por persona)
-        if (error.fields && error.fields.cedula) {
-          console.log('✅ Intentando crear participación adicional con misma cédula');
-
-          try {
-            // Obtener próximo número de ticket
-            const ticketNumber = await Participant.getNextTicketNumber();
-
-            // Crear participante con cédula duplicada (permitido)
-            const participant = await Participant.create({
-              ticket_number: ticketNumber,
-              name: req.body.name?.trim().replace(/[<>\"'&]/g, ''),
-              last_name: req.body.lastName?.trim().replace(/[<>\"'&]/g, ''),
-              cedula: req.body.cedula?.trim().replace(/[^0-9]/g, ''), // Permitir duplicado
-              phone: req.body.phone?.trim().replace(/[^0-9+\-\s]/g, ''),
-              province: req.body.province?.trim(),
-              ticket_validated: true,
-              ticket_image_url: req.session.validationResult.ticketImageUrl || null
-            });
-
-            // Limpiar sesión
-            delete req.session.validationResult;
-
-            return res.json({
-              success: true,
-              message: 'Participante registrado exitosamente (participación adicional)',
-              data: {
-                ticketNumber: participant.ticket_number,
-                name: participant.name,
-                lastName: participant.last_name,
-                isAdditionalParticipation: true
-              }
-            });
-          } catch (createError) {
-            console.error('❌ Error creando participante con cédula duplicada:', createError);
-            return res.status(500).json({
-              success: false,
-              message: 'Error interno del servidor al crear participación adicional'
-            });
-          }
-        } else {
-          // Para otros campos únicos (como ticket_number), devolver error
+        // Solo ticket_number debe ser único, cedula puede repetirse
+        if (error.fields && error.fields.ticket_number) {
           return res.status(400).json({
             success: false,
-            message: 'Ya existe un registro con estos datos'
+            message: 'Error interno: número de ticket duplicado. Intente nuevamente.'
           });
         }
+
+        // Para otros campos únicos, devolver error genérico
+        return res.status(400).json({
+          success: false,
+          message: 'Ya existe un registro con estos datos únicos'
+        });
       }
 
       // Manejar errores de base de datos
