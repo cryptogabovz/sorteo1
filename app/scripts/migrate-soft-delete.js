@@ -1,111 +1,91 @@
-#!/usr/bin/env node
-
-/**
- * Script de migración para agregar columnas de soft delete
- * Se ejecuta automáticamente durante el despliegue con Dokploy
- */
+const { sequelize } = require('../config/database');
 
 async function migrateSoftDelete() {
-  // Crear instancia separada para evitar conflictos con la conexión global
-  const { Sequelize } = require('sequelize');
-  const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASS,
-    {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      dialect: 'postgres',
-      logging: false,
-      pool: {
-        max: 1, // Solo una conexión para evitar conflictos
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      }
-    }
-  );
   try {
     console.log('🔄 Iniciando migración de soft delete...');
 
-    const queryInterface = sequelize.getQueryInterface();
-
+    // Verificar si las columnas ya existen
     console.log('🔍 Verificando columnas en tabla participants...');
 
-    const tableDescription = await queryInterface.describeTable('participants');
+    const [columns] = await sequelize.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'participants' AND table_schema = 'public'
+    `);
 
-    const requiredColumns = ['deleted_at', 'deletion_reason', 'deleted_by'];
-    const missingColumns = [];
+    const columnNames = columns.map(col => col.column_name);
 
-    requiredColumns.forEach(col => {
-      if (!tableDescription[col]) {
-        missingColumns.push(col);
-        console.log(`⚠️ Columna faltante: ${col}`);
-      } else {
-        console.log(`✅ Columna ${col} ya existe`);
-      }
-    });
-
-    if (missingColumns.length > 0) {
-      console.log(`📝 Agregando ${missingColumns.length} columnas faltantes...`);
-
-      // Agregar columnas faltantes
-      for (const col of missingColumns) {
-        try {
-          if (col === 'deleted_at') {
-            await queryInterface.addColumn('participants', col, {
-              type: sequelize.Sequelize.DATE,
-              allowNull: true,
-              comment: 'Fecha de eliminación lógica del ticket'
-            });
-            console.log(`✅ Columna deleted_at agregada`);
-          } else if (col === 'deletion_reason') {
-            await queryInterface.addColumn('participants', col, {
-              type: sequelize.Sequelize.TEXT,
-              allowNull: true,
-              comment: 'Razón por la que se eliminó el ticket'
-            });
-            console.log(`✅ Columna deletion_reason agregada`);
-          } else if (col === 'deleted_by') {
-            await queryInterface.addColumn('participants', col, {
-              type: sequelize.Sequelize.UUID,
-              allowNull: true,
-              comment: 'ID del administrador que eliminó el ticket'
-            });
-            console.log(`✅ Columna deleted_by agregada`);
-          }
-        } catch (addError) {
-          console.error(`❌ Error agregando columna ${col}:`, addError.message);
-          // No fallar completamente por una columna, continuar con las demás
-        }
-      }
-
-      console.log('🎉 Migración completada exitosamente');
+    // Verificar y agregar columna deleted_at
+    if (!columnNames.includes('deleted_at')) {
+      console.log('➕ Agregando columna deleted_at...');
+      await sequelize.query(`
+        ALTER TABLE participants ADD COLUMN deleted_at TIMESTAMP NULL;
+      `);
+      console.log('✅ Columna deleted_at agregada');
     } else {
-      console.log('✅ Todas las columnas de soft delete ya existen');
+      console.log('✅ Columna deleted_at ya existe');
     }
 
+    // Verificar y agregar columna deletion_reason
+    if (!columnNames.includes('deletion_reason')) {
+      console.log('➕ Agregando columna deletion_reason...');
+      await sequelize.query(`
+        ALTER TABLE participants ADD COLUMN deletion_reason TEXT NULL;
+      `);
+      console.log('✅ Columna deletion_reason agregada');
+    } else {
+      console.log('✅ Columna deletion_reason ya existe');
+    }
+
+    // Verificar y agregar columna deleted_by
+    if (!columnNames.includes('deleted_by')) {
+      console.log('➕ Agregando columna deleted_by...');
+      await sequelize.query(`
+        ALTER TABLE participants ADD COLUMN deleted_by UUID NULL;
+      `);
+      console.log('✅ Columna deleted_by agregada');
+    } else {
+      console.log('✅ Columna deleted_by ya existe');
+    }
+
+    // Verificar y agregar columna rejection_date en ticket_validations
+    const [validationColumns] = await sequelize.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'ticket_validations' AND table_schema = 'public'
+    `);
+
+    const validationColumnNames = validationColumns.map(col => col.column_name);
+
+    if (!validationColumnNames.includes('rejection_date')) {
+      console.log('➕ Agregando columna rejection_date en ticket_validations...');
+      await sequelize.query(`
+        ALTER TABLE ticket_validations ADD COLUMN rejection_date DATE NULL;
+      `);
+      console.log('✅ Columna rejection_date agregada en ticket_validations');
+    } else {
+      console.log('✅ Columna rejection_date ya existe en ticket_validations');
+    }
+
+    console.log('✅ Todas las columnas de soft delete ya existen');
+
   } catch (error) {
-    console.error('❌ Error en migración de soft delete:', error.message);
-    console.error('Stack trace:', error.stack);
-    process.exit(1); // Salir con código de error para que Dokploy lo detecte
-  } finally {
-    console.log('🔧 Cerrando conexión separada de migrate-soft-delete');
-    await sequelize.close();
+    console.error('❌ Error en migración de soft delete:', error);
+    throw error;
   }
 }
 
-// Ejecutar migración si se llama directamente
+module.exports = { migrateSoftDelete };
+
+// Ejecutar solo si se llama directamente
 if (require.main === module) {
   migrateSoftDelete()
     .then(() => {
-      console.log('✅ Script de migración finalizado exitosamente');
+      console.log('✅ Migración completada exitosamente');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('❌ Script de migración falló:', error.message);
+      console.error('❌ Error en migración:', error);
       process.exit(1);
     });
 }
-
-module.exports = { migrateSoftDelete };
