@@ -50,7 +50,7 @@
     <div class="container-fluid mt-4">
         <div class="row">
             <!-- Información del Participante -->
-            <div class="col-lg-8">
+            <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">
@@ -132,9 +132,12 @@
                                                 </td>
                                                 <td>
                                                     <% if (ticket.ticket_image_url && ticket.ticket_image_url.startsWith('/uploads/')) { %>
-                                                        <button class="btn btn-sm btn-outline-secondary" onclick="openImageModal('<%= ticket.ticket_image_url %>')">
+                                                        <button class="btn btn-sm btn-outline-secondary" onclick="openImageModal('<%= ticket.ticket_image_url %>')" title="Ver imagen del ticket">
                                                             <i class="fas fa-image"></i>
                                                         </button>
+                                                        <a href="<%= ticket.ticket_image_url %>" target="_blank" class="btn btn-sm btn-outline-primary ms-1" title="Abrir imagen en nueva pestaña">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
                                                     <% } else { %>
                                                         <span class="text-muted">-</span>
                                                     <% } %>
@@ -165,65 +168,14 @@
                 </div>
             </div>
 
-            <!-- Imagen del Ticket -->
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-image me-2" style="color: var(--brand-blue);"></i>
-                            Imagen del Ticket
-                        </h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <% if (participant.ticket_image_url && participant.ticket_image_url.startsWith('/uploads/')) { %>
-                            <div class="ticket-image-container">
-                                <img src="<%= participant.ticket_image_url %>"
-                                     alt="Ticket de <%= participant.name %> <%= participant.last_name %>"
-                                     class="img-fluid rounded shadow"
-                                     style="max-width: 100%; height: auto; cursor: pointer;"
-                                     onclick="openImageModal(this.src)">
-                            </div>
-                            <div class="mt-3">
-                                <button class="btn btn-outline-primary btn-sm" onclick="openImageModal('<%= participant.ticket_image_url %>')">
-                                    <i class="fas fa-expand me-1"></i>Ver en tamaño completo
-                                </button>
-                                <a href="<%= participant.ticket_image_url %>"
-                                   target="_blank"
-                                   class="btn btn-outline-secondary btn-sm ms-2">
-                                    <i class="fas fa-external-link-alt me-1"></i>Abrir en nueva pestaña
-                                </a>
-                            </div>
-                        <% } else { %>
-                            <div class="text-center py-5">
-                                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
-                                <p class="text-muted mt-2">No hay imagen disponible</p>
-                                <small class="text-muted">La imagen del ticket no fue guardada correctamente</small>
-                            </div>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- Acciones -->
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h6 class="mb-0">Acciones</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="/admin/participants" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Volver a Participantes
-                            </a>
-                            <% if (participant.ticket_image_url && participant.ticket_image_url.startsWith('/uploads/')) { %>
-                                <a href="<%= participant.ticket_image_url %>"
-                                   target="_blank"
-                                   class="btn btn-outline-primary">
-                                    <i class="fas fa-external-link-alt me-2"></i>Abrir imagen
-                                </a>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           <!-- Acciones -->
+           <div class="mt-4">
+               <div class="d-flex justify-content-start">
+                   <a href="/admin/participants" class="btn btn-outline-secondary">
+                       <i class="fas fa-arrow-left me-2"></i>Volver a Participantes
+                   </a>
+               </div>
+           </div>
         </div>
     </div>
 
