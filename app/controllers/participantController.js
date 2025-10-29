@@ -270,19 +270,6 @@ class ParticipantController {
         }
       });
 
-      // Limpiar sesión
-      delete req.session.validationResult;
-
-      res.json({
-        success: true,
-        message: 'Participante registrado exitosamente',
-        data: {
-          ticketNumber: participant.ticket_number,
-          name: participant.name,
-          lastName: participant.last_name
-        }
-      });
-
     } catch (error) {
       console.error('❌ Error registrando participante:', error);
       console.error('Stack trace:', error.stack);
