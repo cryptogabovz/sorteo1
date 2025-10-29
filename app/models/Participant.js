@@ -116,6 +116,16 @@ Participant.getNextTicketNumber = async function() {
 
   if (deletedTicket) {
     console.log(`♻️ Reutilizando número de ticket eliminado: ${deletedTicket.ticket_number}`);
+
+    // IMPORTANTE: Marcar el ticket como NO eliminado para evitar conflictos
+    // Esto asegura que el número no se reutilice múltiples veces
+    await deletedTicket.update({
+      deleted_at: null,
+      deletion_reason: null,
+      deleted_by: null
+    });
+
+    console.log(`✅ Ticket ${deletedTicket.ticket_number} reactivado para reutilización`);
     return deletedTicket.ticket_number;
   }
 
