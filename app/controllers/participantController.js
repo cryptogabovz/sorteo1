@@ -297,7 +297,15 @@ class ParticipantController {
           });
         }
 
-        // Para otros campos únicos, devolver error genérico
+        // Para otros campos únicos (como username en admin_users), devolver error específico
+        if (error.fields && error.fields.username) {
+          return res.status(400).json({
+            success: false,
+            message: 'El nombre de usuario ya está en uso'
+          });
+        }
+
+        // Para cualquier otro campo único, devolver error genérico
         return res.status(400).json({
           success: false,
           message: 'Ya existe un registro con estos datos únicos'
