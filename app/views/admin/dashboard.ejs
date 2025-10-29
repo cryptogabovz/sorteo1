@@ -118,12 +118,101 @@
     <script src="/js/admin-dashboard.js"></script>
     <script>
         // Datos del gráfico
-        const dailyMetrics = <%- JSON.stringify(dailyMetrics) %>;
+        const dailyMetrics = <%- JSON.stringify(dailyMetrics || []) %>;
         let currentDays = 7;
+
+        console.log('Datos del gráfico:', dailyMetrics);
 
         // Función para crear el gráfico
         function createChart(data) {
-            const ctx = document.getElementById('dailyChart').getContext('2d');
+            console.log('Creando gráfico con datos:', data);
+
+            const ctx = document.getElementById('dailyChart');
+            if (!ctx) {
+                console.error('Canvas dailyChart no encontrado');
+                return;
+            }
+
+            const context = ctx.getContext('2d');
+
+            // Si no hay datos, mostrar mensaje
+            if (!data || data.length === 0) {
+                console.log('No hay datos para mostrar en el gráfico');
+                // Crear gráfico vacío con mensaje
+                const emptyLabels = [];
+                const emptyData = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    emptyLabels.push(date.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit'
+                    }));
+                    emptyData.push(0);
+                }
+
+                if (window.dailyChart) {
+                    window.dailyChart.destroy();
+                }
+
+                window.dailyChart = new Chart(context, {
+                    type: 'bar',
+                    data: {
+                        labels: emptyLabels,
+                        datasets: [{
+                            label: 'Participantes Registrados',
+                            data: emptyData,
+                            backgroundColor: 'rgba(200, 200, 200, 0.3)',
+                            borderColor: 'rgba(200, 200, 200, 0.5)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Fecha'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Participantes'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            annotation: {
+                                annotations: {
+                                    noData: {
+                                        type: 'label',
+                                        xValue: 'center',
+                                        yValue: 'center',
+                                        content: 'No hay datos disponibles',
+                                        font: {
+                                            size: 16,
+                                            weight: 'bold'
+                                        },
+                                        color: '#666'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
 
             // Preparar datos
             const labels = data.map(item => {
@@ -135,14 +224,17 @@
                 });
             });
 
-            const participantsData = data.map(item => item.participants_count);
+            const participantsData = data.map(item => parseInt(item.participants_count) || 0);
+
+            console.log('Labels:', labels);
+            console.log('Data:', participantsData);
 
             // Destruir gráfico anterior si existe
             if (window.dailyChart) {
                 window.dailyChart.destroy();
             }
 
-            window.dailyChart = new Chart(ctx, {
+            window.dailyChart = new Chart(context, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -190,6 +282,8 @@
                     }
                 }
             });
+
+            console.log('Gráfico creado exitosamente');
         }
 
         // Función para cambiar días
