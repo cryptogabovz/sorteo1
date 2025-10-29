@@ -1,6 +1,23 @@
-const { sequelize } = require('./app/config/database');
-
 async function debugRegistration() {
+  // Crear instancia separada para evitar conflictos con la conexión global
+  const { Sequelize } = require('sequelize');
+  const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      dialect: 'postgres',
+      logging: false,
+      pool: {
+        max: 1, // Solo una conexión para evitar conflictos
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      }
+    }
+  );
   try {
     console.log('🔍 Depurando registro de participantes...');
 
@@ -51,6 +68,7 @@ async function debugRegistration() {
       console.error('Campos con error de unicidad:', error.fields);
     }
   } finally {
+    console.log('🔧 Cerrando conexión separada de debug-migration');
     await sequelize.close();
   }
 }

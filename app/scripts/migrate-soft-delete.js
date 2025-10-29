@@ -5,9 +5,26 @@
  * Se ejecuta automáticamente durante el despliegue con Dokploy
  */
 
-const { sequelize } = require('../config/database');
-
 async function migrateSoftDelete() {
+  // Crear instancia separada para evitar conflictos con la conexión global
+  const { Sequelize } = require('sequelize');
+  const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      dialect: 'postgres',
+      logging: false,
+      pool: {
+        max: 1, // Solo una conexión para evitar conflictos
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      }
+    }
+  );
   try {
     console.log('🔄 Iniciando migración de soft delete...');
 
@@ -73,6 +90,7 @@ async function migrateSoftDelete() {
     console.error('Stack trace:', error.stack);
     process.exit(1); // Salir con código de error para que Dokploy lo detecte
   } finally {
+    console.log('🔧 Cerrando conexión separada de migrate-soft-delete');
     await sequelize.close();
   }
 }
