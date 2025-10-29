@@ -1,7 +1,8 @@
 const { sequelize } = require('./app/config/database');
 
-async function fixConstraints() {
-  let connectionClosed = false;
+async function fixConstraints(sequelizeInstance = null) {
+  // Usar instancia proporcionada o la global
+  const sequelize = sequelizeInstance || require('./app/config/database').sequelize;
   try {
     console.log('🔧 Aplicando corrección final de restricciones...');
 
@@ -100,8 +101,14 @@ async function fixConstraints() {
       console.error('Campos con error de unicidad:', error.fields);
     }
   } finally {
-    // NO cerrar conexión aquí - dejar que app.js la maneje
-    console.log('🔧 Corrección finalizada, dejando conexión abierta para app.js');
+    // Solo cerrar si es una instancia separada (proporcionada por app.js)
+    if (sequelizeInstance) {
+      console.log('🔧 Cerrando conexión separada de fix-constraints');
+      await sequelize.close();
+    } else {
+      // NO cerrar conexión global - dejar que app.js la maneje
+      console.log('🔧 Corrección finalizada, dejando conexión global abierta para app.js');
+    }
   }
 }
 

@@ -75,8 +75,30 @@ const startServer = async () => {
       console.log('🔧 Ejecutando corrección de restricciones en producción...');
       try {
         // Importar y ejecutar la función
+        const { sequelize } = require('./app/config/database');
         const fixConstraints = require('./fix-constraints.js');
-        await fixConstraints();
+
+        // Crear nueva instancia de sequelize para evitar conflictos de conexión
+        const fixSequelize = new (require('sequelize').Sequelize)(
+          process.env.DB_NAME,
+          process.env.DB_USER,
+          process.env.DB_PASS,
+          {
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            dialect: 'postgres',
+            logging: false,
+            pool: {
+              max: 1, // Solo una conexión para evitar conflictos
+              min: 0,
+              acquire: 30000,
+              idle: 10000
+            }
+          }
+        );
+
+        await fixConstraints(fixSequelize);
+        await fixSequelize.close(); // Cerrar esta conexión específica
         console.log('✅ Corrección de restricciones completada');
       } catch (fixError) {
         console.error('❌ Error en corrección de restricciones:', fixError.message);
