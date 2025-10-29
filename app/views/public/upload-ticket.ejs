@@ -33,40 +33,41 @@
                         <div class="card-body p-4">
                             <h3 class="card-title text-center mb-4">Sube tu ticket</h3>
 
-                            <!-- Contenedor principal de subida -->
-                            <div id="uploadContainer">
-                                <!-- Área de drop -->
-                                <div id="dropArea" class="drop-area mb-4">
-                                <div class="drop-content">
-                                    <div class="drop-icon">
-                                        <i class="fas fa-cloud-upload-alt" style="color: var(--brand-blue); font-size: 3rem;"></i>
-                                    </div>
-                                    <p class="mb-2">Arrastra tu imagen aquí</p>
-                                    <p class="text-muted small">o</p>
-                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('ticketFile').click()">
-                                        <i class="fas fa-folder-open me-2"></i>Seleccionar archivo
-                                    </button>
-                                </div>
-                                <div id="fileInfo" class="file-info" style="display: none;">
-                                    <div class="file-name"></div>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Cuadro unificado para vista previa y escaneo -->
-                            <div id="imagePreview" class="image-unified-container mb-4" style="display: none;">
-                                <div class="unified-frame">
-                                    <img id="previewImage" src="" alt="Vista previa" class="img-fluid unified-image">
-                                    <!-- Barra de escaneo (inicialmente oculta) -->
-                                    <div class="scanner-line" id="scannerLine" style="display: none;"></div>
-                                    <!-- Información inferior -->
-                                    <div class="unified-info" id="unifiedInfo">
-                                        <span class="unified-text" id="unifiedText">Imagen lista para validar</span>
-                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="changeBtn" onclick="removeFile()">
-                                            <i class="fas fa-times"></i> Cambiar
+                            <!-- Cuadro unificado para subida, vista previa y escaneo -->
+                            <div id="unifiedContainer" class="unified-main-container mb-4">
+                                <!-- Estado inicial: Área de drop -->
+                                <div id="dropArea" class="drop-area">
+                                    <div class="drop-content">
+                                        <div class="drop-icon">
+                                            <i class="fas fa-cloud-upload-alt" style="color: var(--brand-blue); font-size: 3rem;"></i>
+                                        </div>
+                                        <p class="mb-2">Arrastra tu imagen aquí</p>
+                                        <p class="text-muted small">o</p>
+                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('ticketFile').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Seleccionar archivo
                                         </button>
+                                    </div>
+                                    <div id="fileInfo" class="file-info" style="display: none;">
+                                        <div class="file-name"></div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Estado con imagen: Vista previa y escaneo -->
+                                <div id="imagePreview" class="image-unified-container" style="display: none;">
+                                    <div class="unified-frame">
+                                        <img id="previewImage" src="" alt="Vista previa" class="img-fluid unified-image">
+                                        <!-- Barra de escaneo (inicialmente oculta) -->
+                                        <div class="scanner-line" id="scannerLine" style="display: none;"></div>
+                                        <!-- Información inferior -->
+                                        <div class="unified-info" id="unifiedInfo">
+                                            <span class="unified-text" id="unifiedText">Imagen lista para validar</span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="changeBtn" onclick="removeFile()">
+                                                <i class="fas fa-times"></i> Cambiar
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
