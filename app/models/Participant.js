@@ -104,7 +104,22 @@ const Participant = sequelize.define('participants', {
 
 // Método para obtener próximo número de ticket disponible
 Participant.getNextTicketNumber = async function() {
-  // Buscar el último ticket activo (no eliminado)
+  // Primero buscar si hay números eliminados disponibles (reutilización)
+  const deletedTicket = await this.findOne({
+    where: {
+      deleted_at: {
+        [require('sequelize').Op.ne]: null // Tickets eliminados
+      }
+    },
+    order: [['ticket_number', 'ASC']] // El más bajo disponible primero
+  });
+
+  if (deletedTicket) {
+    console.log(`♻️ Reutilizando número de ticket eliminado: ${deletedTicket.ticket_number}`);
+    return deletedTicket.ticket_number;
+  }
+
+  // Si no hay eliminados, buscar el último ticket activo (no eliminado)
   const lastParticipant = await this.findOne({
     where: {
       deleted_at: null // Solo tickets no eliminados

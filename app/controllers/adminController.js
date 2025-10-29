@@ -844,6 +844,8 @@ class AdminController {
         deleted_by: adminId
       });
 
+      console.log(`♻️ Ticket ${ticketInfo.ticketNumber} marcado como eliminado - número disponible para reutilización`);
+
       console.log(`✅ Ticket eliminado (soft delete): ${ticketInfo.ticketNumber} - ${ticketInfo.name} ${ticketInfo.lastName} (${ticketInfo.cedula})`);
       console.log(`📝 Razón: ${reason.trim()}`);
 
