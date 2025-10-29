@@ -3,6 +3,46 @@ const Participant = require('./Participant');
 const AdminUser = require('./AdminUser');
 const TicketValidation = require('./TicketValidation');
 
+// Función para ejecutar migraciones pendientes
+const runPendingMigrations = async () => {
+  try {
+    console.log('🔄 Verificando migraciones pendientes...');
+    const queryInterface = sequelize.getQueryInterface();
+
+    // Lista de migraciones a ejecutar
+    const migrations = [
+      {
+        name: 'remove_cedula_unique',
+        check: async () => {
+          const constraints = await queryInterface.showConstraint('participants');
+          return !constraints.some(c => c.constraintName === 'participants_cedula_key');
+        },
+        run: async () => {
+          const migration = require('./migrations/remove_cedula_unique.js');
+          await migration.up(queryInterface, sequelize.constructor);
+          console.log('✅ Migración remove_cedula_unique ejecutada');
+        }
+      }
+    ];
+
+    // Ejecutar migraciones pendientes
+    for (const migration of migrations) {
+      const alreadyApplied = await migration.check();
+      if (!alreadyApplied) {
+        console.log(`📋 Ejecutando migración: ${migration.name}`);
+        await migration.run();
+      } else {
+        console.log(`⏭️ Migración ${migration.name} ya aplicada`);
+      }
+    }
+
+    console.log('✅ Todas las migraciones verificadas');
+  } catch (error) {
+    console.error('❌ Error ejecutando migraciones:', error.message);
+    // No fallar el inicio por errores de migración
+  }
+};
+
 // Sincronizar modelos con la base de datos
 const syncDatabase = async () => {
   try {
@@ -14,6 +54,9 @@ const syncDatabase = async () => {
       await AdminUser.createDefaultAdmin();
     } else {
       console.log('ℹ️ Modo producción: Inicializando base de datos...');
+
+      // Ejecutar migraciones pendientes ANTES de verificar tablas
+      await runPendingMigrations();
 
       // Verificar si las tablas existen
       const queryInterface = sequelize.getQueryInterface();
