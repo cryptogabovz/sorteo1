@@ -233,7 +233,7 @@ class ParticipantController {
       // Obtener próximo número de ticket
       const ticketNumber = await Participant.getNextTicketNumber();
 
-      // Crear participante con datos sanitizados
+      // Intentar crear participante directamente (ahora sin restricción de unicidad)
       try {
         const participant = await Participant.create({
           ticket_number: ticketNumber,
@@ -248,22 +248,35 @@ class ParticipantController {
 
         // Limpiar sesión
         delete req.session.validationResult;
-
+ 
+        // Verificar si ya existe un participante con esta cédula para determinar el mensaje
+        const existingParticipants = await Participant.findAll({
+          where: { cedula: sanitizedData.cedula },
+          order: [['created_at', 'DESC']],
+          limit: 2
+        });
+ 
+        const isAdditionalParticipation = existingParticipants.length > 1;
+        const message = isAdditionalParticipation
+          ? 'Participante registrado exitosamente (participación adicional)'
+          : 'Participante registrado exitosamente';
+ 
         res.json({
           success: true,
-          message: 'Participante registrado exitosamente',
+          message: message,
           data: {
             ticketNumber: participant.ticket_number,
             name: participant.name,
-            lastName: participant.last_name
+            lastName: participant.last_name,
+            isAdditionalParticipation: isAdditionalParticipation
           }
         });
       } catch (createError) {
         console.error('❌ Error creando participante:', createError);
 
-        // Si es error de unicidad en cédula, intentar crear con manejo especial
+        // Si aún hay error de unicidad (por si la migración no se aplicó), intentar manejo especial
         if (createError.name === 'SequelizeUniqueConstraintError' && createError.fields?.cedula) {
-          console.log('⚠️ Error de unicidad detectado en creación inicial, intentando manejo especial');
+          console.log('⚠️ Error de unicidad detectado - intentando crear participación adicional');
 
           try {
             // Obtener próximo número de ticket
@@ -272,13 +285,13 @@ class ParticipantController {
             // Crear participante con cédula duplicada (permitido)
             const participant = await Participant.create({
               ticket_number: ticketNumber,
-              name: req.body.name?.trim().replace(/[<>\"'&]/g, ''),
-              last_name: req.body.lastName?.trim().replace(/[<>\"'&]/g, ''),
-              cedula: req.body.cedula?.trim().replace(/[^0-9]/g, ''), // Permitir duplicado
-              phone: req.body.phone?.trim().replace(/[^0-9+\-\s]/g, ''),
-              province: req.body.province?.trim(),
+              name: sanitizedData.name,
+              last_name: sanitizedData.lastName,
+              cedula: sanitizedData.cedula, // Permitir duplicado
+              phone: sanitizedData.phone,
+              province: sanitizedData.province,
               ticket_validated: true,
-              ticket_image_url: req.session.validationResult.ticketImageUrl || null
+              ticket_image_url: validationResult.ticketImageUrl || null
             });
 
             // Limpiar sesión
@@ -290,7 +303,8 @@ class ParticipantController {
               data: {
                 ticketNumber: participant.ticket_number,
                 name: participant.name,
-                lastName: participant.last_name
+                lastName: participant.last_name,
+                isAdditionalParticipation: true
               }
             });
           } catch (retryError) {
@@ -338,12 +352,12 @@ class ParticipantController {
 
       // Manejar errores de unicidad - ahora permitimos múltiples registros
       if (error.name === 'SequelizeUniqueConstraintError') {
-        console.log('⚠️ Error de unicidad detectado, pero permitiendo múltiples participaciones');
+        console.log('⚠️ Error de unicidad detectado, intentando participación adicional');
         console.log('📋 Detalles del error de unicidad:', error.fields);
 
         // Para cédula duplicada, permitir continuar (múltiples tickets por persona)
         if (error.fields && error.fields.cedula) {
-          console.log('✅ Permitido: Múltiples participaciones con misma cédula');
+          console.log('✅ Intentando crear participación adicional con misma cédula');
 
           try {
             // Obtener próximo número de ticket
@@ -370,7 +384,8 @@ class ParticipantController {
               data: {
                 ticketNumber: participant.ticket_number,
                 name: participant.name,
-                lastName: participant.last_name
+                lastName: participant.last_name,
+                isAdditionalParticipation: true
               }
             });
           } catch (createError) {
@@ -381,7 +396,7 @@ class ParticipantController {
             });
           }
         } else {
-          // Para otros campos únicos, devolver error
+          // Para otros campos únicos (como ticket_number), devolver error
           return res.status(400).json({
             success: false,
             message: 'Ya existe un registro con estos datos'
