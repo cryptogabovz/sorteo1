@@ -754,13 +754,21 @@ class AdminController {
       const transaction = await sequelize.transaction();
 
       try {
-        // Eliminar todos los participantes
-        const deletedParticipants = await Participant.destroy({ transaction });
+        // Eliminar todos los participantes (usar truncate para eliminar todos sin where clause)
+        const deletedParticipants = await Participant.destroy({
+          where: {}, // Eliminar todos los registros
+          truncate: true, // Usar TRUNCATE para mejor rendimiento
+          transaction
+        });
         console.log(`✅ Eliminados ${deletedParticipants} participantes`);
 
         // Limpiar tabla de validaciones temporales
         const TicketValidation = require('../models/TicketValidation');
-        const deletedValidations = await TicketValidation.destroy({ transaction });
+        const deletedValidations = await TicketValidation.destroy({
+          where: {}, // Eliminar todos los registros
+          truncate: true, // Usar TRUNCATE para mejor rendimiento
+          transaction
+        });
         console.log(`✅ Eliminadas ${deletedValidations} validaciones temporales`);
 
         // Confirmar transacción
