@@ -32,6 +32,7 @@ router.get('/registro', (req, res) => {
   console.log('🔍 Verificando acceso a /registro...');
   console.log('Sesión actual:', {
     validationResult: req.session.validationResult,
+    confirmationData: req.session.confirmationData,
     sessionID: req.sessionID
   });
 
@@ -83,16 +84,23 @@ router.post('/api/register', participantController.register);
 
 // Página de confirmación exitosa
 router.get('/exito', (req, res) => {
+  console.log('🔍 Verificando acceso a /exito...');
+
   // Verificar que haya datos de confirmación en sesión
   if (!req.session.confirmationData) {
+    console.log('❌ Acceso denegado a /exito - No hay confirmationData en sesión');
     return res.redirect('/');
   }
 
+  console.log('✅ Acceso permitido a /exito - Datos de confirmación encontrados');
+  console.log('Datos de confirmación:', req.session.confirmationData);
+
   const confirmationData = req.session.confirmationData;
-  delete req.session.confirmationData; // Limpiar después de mostrar
+  // NO limpiar datos de confirmación aquí - permitir recargas de página
+  // delete req.session.confirmationData;
 
   res.render('public/success', {
-    title: '¡Registro Exitoso!',
+    title: 'Registro Exitoso - Sistema de Sorteo',
     data: confirmationData
   });
 });

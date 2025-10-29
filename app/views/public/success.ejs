@@ -52,7 +52,12 @@
                         <div class="participation-number">
                             <div class="number-label">Tu Número de Participación</div>
                             <div class="number-value"><%= data.ticketNumber %></div>
-                            <div class="number-description">Este número es único e intransferible</div>
+                            <div class="number-description">
+                                Este número es único e intransferible
+                                <% if (data.isAdditionalParticipation) { %>
+                                    <br><small class="text-success"><i class="fas fa-plus-circle me-1"></i>Boleto adicional registrado</small>
+                                <% } %>
+                            </div>
                         </div>
 
                         <!-- Información del participante -->
@@ -92,6 +97,12 @@
                                     <label>Número de Ticket:</label>
                                     <span><%= data.ticketNumber %></span>
                                 </div>
+                                <% if (data.totalTicketsForUser) { %>
+                                <div class="detail-item">
+                                    <label>Total de Boletos:</label>
+                                    <span class="badge bg-primary fs-6"><%= data.totalTicketsForUser %></span>
+                                </div>
+                                <% } %>
                             </div>
                         </div>
 
@@ -102,10 +113,22 @@
                                 Información del Sorteo
                             </h4>
                             <div class="info-content">
-                                <p><strong>Estado:</strong> Participante registrado exitosamente</p>
+                                <p><strong>Estado:</strong>
+                                    <% if (data.isAdditionalParticipation) { %>
+                                        <span class="badge bg-success">Boleto adicional registrado</span>
+                                    <% } else { %>
+                                        Participante registrado exitosamente
+                                    <% } %>
+                                </p>
                                 <p><strong>Fecha del sorteo:</strong> Por anunciar</p>
                                 <p><strong>Forma de contacto:</strong> Te contactaremos si resultas ganador</p>
                                 <p><strong>Premios:</strong> Información disponible próximamente</p>
+                                <% if (data.isAdditionalParticipation) { %>
+                                <div class="alert alert-info mt-2">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>¡Excelente!</strong> Has aumentado tus chances de ganar con este boleto adicional.
+                                </div>
+                                <% } %>
                             </div>
                         </div>
 
@@ -156,10 +179,14 @@
                     <div class="action-buttons mt-4">
                         <div class="row justify-content-center">
                             <div class="col-auto">
-                                <a href="/" class="btn btn-primary btn-lg">
+                                <a href="/" class="btn btn-primary btn-lg me-3">
                                     <i class="fas fa-home me-2" style="color: white;"></i>
                                     Volver al Inicio
                                 </a>
+                                <button onclick="window.print()" class="btn btn-outline-primary btn-lg">
+                                    <i class="fas fa-print me-2"></i>
+                                    Imprimir Comprobante
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -169,9 +196,19 @@
                         <div class="alert alert-success text-center">
                             <h4 class="alert-heading">
                                 <i class="fas fa-check-circle text-success me-2" style="font-size: 2rem;"></i>
-                                ¡Registro Exitoso!
+                                <% if (data.isAdditionalParticipation) { %>
+                                    ¡Boleto Adicional Registrado!
+                                <% } else { %>
+                                    ¡Registro Exitoso!
+                                <% } %>
                             </h4>
-                            <p class="mb-0">Gracias por participar en nuestro sorteo. Tu información ha sido registrada correctamente.</p>
+                            <p class="mb-0">
+                                <% if (data.isAdditionalParticipation) { %>
+                                    Excelente decisión. Has aumentado tus oportunidades de ganar con este boleto adicional.
+                                <% } else { %>
+                                    Gracias por participar en nuestro sorteo. Tu información ha sido registrada correctamente.
+                                <% } %>
+                            </p>
                         </div>
                     </div>
 
@@ -180,19 +217,36 @@
                         <div class="alert alert-info text-center border-primary">
                             <h5 class="alert-heading">
                                 <i class="fas fa-shopping-cart text-primary me-2"></i>
-                                ¡Aumenta tus Chances de Ganar!
+                                <% if (data.isAdditionalParticipation) { %>
+                                    ¡Sigue Aumentando tus Chances!
+                                <% } else { %>
+                                    ¡Aumenta tus Chances de Ganar!
+                                <% } %>
                             </h5>
                             <p class="mb-2">
-                                <strong>¿Quieres más boletos para el sorteo?</strong>
+                                <strong>
+                                    <% if (data.isAdditionalParticipation) { %>
+                                        ¿Quieres aún más boletos?
+                                    <% } else { %>
+                                        ¿Quieres más boletos para el sorteo?
+                                    <% } %>
+                                </strong>
                             </p>
                             <p class="mb-3">
                                 Compra otro producto Purelac, sube tu ticket y obtén un nuevo número de participación.
                                 ¡Entre más productos compres, más oportunidades tendrás de ganar!
+                                <% if (data.totalTicketsForUser && data.totalTicketsForUser > 1) { %>
+                                    <br><small class="text-muted">Actualmente tienes <strong><%= data.totalTicketsForUser %></strong> boletos registrados.</small>
+                                <% } %>
                             </p>
                             <div class="text-center">
                                 <a href="/participar" class="btn btn-primary btn-lg">
                                     <i class="fas fa-plus-circle me-2"></i>
-                                    Participar con Otro Ticket
+                                    <% if (data.isAdditionalParticipation) { %>
+                                        Obtener Otro Boleto
+                                    <% } else { %>
+                                        Participar con Otro Ticket
+                                    <% } %>
                                 </a>
                             </div>
                         </div>
@@ -216,12 +270,37 @@
             window.print();
         }
 
-        // Auto-impresión opcional (comentado)
-        // window.onload = function() {
-        //     setTimeout(function() {
-        //         window.print();
-        //     }, 1000);
-        // };
+        // Auto-scroll al número de participación al cargar
+        window.onload = function() {
+            // Hacer scroll suave al número de participación
+            const participationNumber = document.querySelector('.participation-number');
+            if (participationNumber) {
+                participationNumber.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+
+            // Animación de entrada para el número
+            setTimeout(() => {
+                const numberValue = document.querySelector('.number-value');
+                if (numberValue) {
+                    numberValue.style.animation = 'bounceIn 1s ease-out';
+                }
+            }, 500);
+        };
+
+        // Agregar estilos de animación
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes bounceIn {
+                0% { transform: scale(0.3); opacity: 0; }
+                50% { transform: scale(1.05); }
+                70% { transform: scale(0.9); }
+                100% { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

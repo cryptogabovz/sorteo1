@@ -288,6 +288,19 @@ class ParticipantController {
         ? 'Boleto adicional registrado exitosamente'
         : 'Participante registrado exitosamente';
 
+      // Guardar datos en sesión para la página de éxito
+      req.session.confirmationData = {
+        ticketNumber: participant.ticket_number,
+        name: participant.name,
+        lastName: participant.last_name,
+        cedula: participant.cedula,
+        phone: participant.phone,
+        province: participant.province,
+        isAdditionalParticipation: isAdditionalParticipation,
+        totalTicketsForUser: totalTicketsForUser,
+        registrationDate: participant.created_at
+      };
+
       res.json({
         success: true,
         message: message,
