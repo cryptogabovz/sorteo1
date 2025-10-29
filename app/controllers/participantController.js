@@ -293,7 +293,7 @@ class ParticipantController {
             phone: req.body.phone?.trim().replace(/[^0-9+\-\s]/g, ''),
             province: req.body.province?.trim(),
             ticket_validated: true,
-            ticket_image_url: validationResult.ticketImageUrl || null
+            ticket_image_url: req.session.validationResult.ticketImageUrl || null
           });
 
           // Limpiar sesión
