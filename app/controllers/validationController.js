@@ -238,6 +238,9 @@ class ValidationController {
       // Si es rechazado, agregar fecha de rechazo para métricas
       if (!valid) {
         updateData.rejection_date = new Date().toISOString().split('T')[0]; // Solo fecha YYYY-MM-DD
+      } else {
+        // Si es aprobado, limpiar rejection_date si existía
+        updateData.rejection_date = null;
       }
 
       await ticketValidation.update(updateData);
