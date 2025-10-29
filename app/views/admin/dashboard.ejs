@@ -119,6 +119,9 @@
     <script src="https://unpkg.com/@mui/x-charts@7.0.0/umd/index.js"></script>
     <script src="/js/admin-dashboard.js"></script>
 
+    <!-- Contenedor del gráfico -->
+    <div id="chart-container" style="width: 100%; height: 400px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin: 10px 0;"></div>
+
     <script>
         // Datos del gráfico
         const dailyMetrics = <%- JSON.stringify(dailyMetrics || []) %>;
@@ -131,58 +134,63 @@
             if (!data || data.length === 0) {
                 // Crear datos vacíos para los últimos días
                 const emptyData = [];
-                const emptyLabels = [];
                 for (let i = days - 1; i >= 0; i--) {
                     const date = new Date();
                     date.setDate(date.getDate() - i);
-                    emptyLabels.push(date.toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit'
-                    }));
-                    emptyData.push(0);
+                    emptyData.push({
+                        date: date.toISOString().split('T')[0],
+                        participants_count: 0
+                    });
                 }
-                return { labels: emptyLabels, data: emptyData };
+                return emptyData;
             }
 
-            // Preparar datos reales
-            const labels = data.map(item => {
-                const date = new Date(item.date + 'T00:00:00');
-                return date.toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit'
-                });
-            });
-
-            const chartData = data.map(item => parseInt(item.participants_count) || 0);
-
-            return { labels, data: chartData };
+            return data;
         }
 
-        // Componente React para el gráfico
-        function DailyChart({ data, days }) {
+        // Función para formatear valores
+        function valueFormatter(value) {
+            return `${value} participantes`;
+        }
+
+        // Componente React para el gráfico simplificado
+        function DailyParticipantsChart({ data, days }) {
             const chartData = prepareChartData(data, days);
             console.log('Renderizando gráfico con:', chartData);
 
-            return React.createElement(mui.xCharts.BarChart, {
-                xAxis: [{
-                    scaleType: 'band',
-                    data: chartData.labels,
-                    categoryGapRatio: 0.3,
-                    barGapRatio: 0.1,
-                }],
-                series: [{
-                    data: chartData.data,
-                    label: 'Participantes Registrados',
-                    color: '#007bff'
-                }],
-                width: 800,
-                height: 400,
-                margin: { top: 20, right: 30, bottom: 40, left: 60 },
-                grid: { vertical: true, horizontal: true },
-                tooltip: {
-                    trigger: 'axis'
-                }
-            });
+            return React.createElement('div', { style: { width: '100%' } },
+                React.createElement('h5', { style: { marginBottom: '20px', color: '#333' } }, 'Participantes Diarios Registrados'),
+                React.createElement(mui.xCharts.BarChart, {
+                    dataset: chartData,
+                    series: [{
+                        dataKey: 'participants_count',
+                        label: 'Participantes',
+                        color: '#007bff'
+                    }],
+                    xAxis: [{
+                        dataKey: 'date',
+                        scaleType: 'band',
+                        valueFormatter: (value) => {
+                            const date = new Date(value + 'T00:00:00');
+                            return date.toLocaleDateString('es-ES', {
+                                day: '2-digit',
+                                month: '2-digit'
+                            });
+                        }
+                    }],
+                    height: 350,
+                    margin: { left: 60, right: 30, top: 20, bottom: 40 },
+                    yAxis: [{
+                        width: 60,
+                        valueFormatter: valueFormatter
+                    }],
+                    grid: { vertical: true, horizontal: true },
+                    tooltip: {
+                        trigger: 'axis',
+                        valueFormatter: valueFormatter
+                    }
+                })
+            );
         }
 
         // Componente principal de la app
@@ -190,33 +198,10 @@
             const [chartData, setChartData] = React.useState(dailyMetrics);
             const [days, setDays] = React.useState(currentDays);
 
-            const handleDaysChange = async (newDays) => {
-                setDays(newDays);
-                currentDays = newDays;
-
-                // Actualizar botones activos
-                document.querySelectorAll('.btn-group .btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                event.target.classList.add('active');
-
-                try {
-                    const response = await fetch(`/admin/api/daily-metrics?days=${newDays}`);
-                    const result = await response.json();
-
-                    if (result.success) {
-                        setChartData(result.data);
-                    } else {
-                        console.error('Error cargando métricas:', result.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            };
-
-            return React.createElement('div', null,
-                React.createElement(DailyChart, { data: chartData, days: days })
-            );
+            return React.createElement(DailyParticipantsChart, {
+                data: chartData,
+                days: days
+            });
         }
 
         // Renderizar la app React
@@ -248,7 +233,10 @@
                     const container = document.getElementById('chart-container');
                     if (container) {
                         ReactDOM.render(
-                            React.createElement(DailyChart, { data: result.data, days: days }),
+                            React.createElement(DailyParticipantsChart, {
+                                data: result.data,
+                                days: days
+                            }),
                             container
                         );
                     }
