@@ -104,46 +104,60 @@ const Participant = sequelize.define('participants', {
 
 // Método para obtener próximo número de ticket disponible
 Participant.getNextTicketNumber = async function() {
-  // Primero buscar si hay números eliminados disponibles (reutilización)
+  console.log('🔍 Buscando próximo número de ticket disponible...');
+
+  // PRIMERO: Buscar tickets eliminados disponibles para reutilización
   const deletedTicket = await this.findOne({
     where: {
       deleted_at: {
         [require('sequelize').Op.ne]: null // Tickets eliminados
       }
     },
-    order: [['ticket_number', 'ASC']] // El más bajo disponible primero
+    order: [['ticket_number', 'ASC']], // El más bajo disponible primero
+    attributes: ['id', 'ticket_number', 'deleted_at'] // Solo campos necesarios
   });
 
   if (deletedTicket) {
-    console.log(`♻️ Reutilizando número de ticket eliminado: ${deletedTicket.ticket_number}`);
+    console.log(`♻️ Encontrado ticket eliminado para reutilizar: ${deletedTicket.ticket_number} (ID: ${deletedTicket.id})`);
 
-    // IMPORTANTE: Marcar el ticket como NO eliminado para evitar conflictos
-    // Esto asegura que el número no se reutilice múltiples veces
-    await deletedTicket.update({
-      deleted_at: null,
-      deletion_reason: null,
-      deleted_by: null
-    });
-
-    console.log(`✅ Ticket ${deletedTicket.ticket_number} reactivado para reutilización`);
-    return deletedTicket.ticket_number;
+    // IMPORTANTE: Reactivar el ticket eliminado antes de devolver el número
+    // Esto previene conflictos de unicidad al crear el nuevo registro
+    try {
+      await deletedTicket.update({
+        deleted_at: null,
+        deletion_reason: null,
+        deleted_by: null
+      });
+      console.log(`✅ Ticket ${deletedTicket.ticket_number} reactivado exitosamente`);
+      return deletedTicket.ticket_number;
+    } catch (reactivateError) {
+      console.error(`❌ Error reactivando ticket ${deletedTicket.ticket_number}:`, reactivateError.message);
+      // Si falla la reactivación, continuar con numeración secuencial
+    }
   }
 
-  // Si no hay eliminados, buscar el último ticket activo (no eliminado)
+  // SEGUNDO: Si no hay eliminados disponibles, usar numeración secuencial
+  console.log('📈 Usando numeración secuencial (no hay tickets eliminados disponibles)');
+
   const lastParticipant = await this.findOne({
     where: {
       deleted_at: null // Solo tickets no eliminados
     },
-    order: [['ticket_number', 'DESC']]
+    order: [['ticket_number', 'DESC']],
+    attributes: ['ticket_number'] // Solo necesitamos el número
   });
 
   if (!lastParticipant) {
+    console.log('🆕 No hay participantes previos, empezando con 0001');
     return '0001';
   }
 
   const lastNumber = parseInt(lastParticipant.ticket_number);
   const nextNumber = lastNumber + 1;
-  return nextNumber.toString().padStart(4, '0');
+  const nextNumberFormatted = nextNumber.toString().padStart(4, '0');
+
+  console.log(`📊 Último ticket: ${lastParticipant.ticket_number}, Próximo: ${nextNumberFormatted}`);
+  return nextNumberFormatted;
 };
 
 // Método para obtener estadísticas
