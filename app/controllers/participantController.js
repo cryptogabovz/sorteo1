@@ -254,11 +254,13 @@ class ParticipantController {
       });
 
     } catch (error) {
-      console.error('Error registrando participante:', error);
+      console.error('❌ Error registrando participante:', error);
+      console.error('Stack trace:', error.stack);
 
       // Manejar errores de validación de Sequelize
       if (error.name === 'SequelizeValidationError') {
         const messages = error.errors.map(err => err.message);
+        console.log('📋 Errores de validación:', messages);
         return res.status(400).json({
           success: false,
           message: messages.join(', ')
@@ -269,6 +271,15 @@ class ParticipantController {
       if (error.name === 'SequelizeUniqueConstraintError') {
         console.log('⚠️ Error de unicidad detectado, pero permitiendo múltiples participaciones');
         // No devolver error, continuar normalmente
+      }
+
+      // Manejar errores de base de datos
+      if (error.name === 'SequelizeDatabaseError') {
+        console.error('💾 Error de base de datos:', error.original?.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Error de base de datos. Intente nuevamente.'
+        });
       }
 
       res.status(500).json({
