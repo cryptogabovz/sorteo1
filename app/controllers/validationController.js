@@ -235,15 +235,8 @@ class ValidationController {
         n8n_response_received: true
       };
 
-      // Solo actualizar rejection_date si es rechazado (evitar error de columna)
-      if (!valid) {
-        // Verificar si la columna existe antes de actualizar
-        try {
-          updateData.rejection_date = new Date().toISOString().split('T')[0]; // Solo fecha YYYY-MM-DD
-        } catch (columnError) {
-          console.log('⚠️ Columna rejection_date no disponible, omitiendo actualización');
-        }
-      }
+      // Nota: rejection_date se maneja opcionalmente para métricas futuras
+      // Por ahora no se actualiza para evitar errores de columna inexistente
 
       await ticketValidation.update(updateData);
 
